@@ -28,7 +28,7 @@ End Sub
 ' --- Funcao: envia pro Slack (totalmente opcional, nunca para o script) ---
 Sub SendSlack(msg)
     On Error Resume Next
-    If slackWebhook = "YOUR_SLACK_WEBHOOK_URL" Or slackWebhook = "" Then Exit Sub
+    If InStr(slackWebhook, "hooks.slack.com") = 0 Then Exit Sub
     Dim tsTmp
     Set tsTmp = fso.CreateTextFile(tmpFile, True)
     tsTmp.Write msg
