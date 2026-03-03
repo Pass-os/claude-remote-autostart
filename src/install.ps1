@@ -155,18 +155,36 @@ function New-CheckRow($parent, $label, $y) {
     return $status
 }
 
+# Win32: cantos arredondados
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public class Win32 {
+    [DllImport("gdi32.dll")] public static extern IntPtr CreateRoundRectRgn(int x1,int y1,int x2,int y2,int cx,int cy);
+    [DllImport("user32.dll")] public static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool bRedraw);
+}
+'@
+
 # Form
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = 'Claude Remote Autostart'
-$form.Size            = New-Object System.Drawing.Size(460, 520)
+$form.Size            = New-Object System.Drawing.Size(460, 556)
 $form.StartPosition   = 'CenterScreen'
 $form.BackColor       = $bg
 $form.ForeColor       = $fgDark
 $form.Font            = $fontMain
-$form.FormBorderStyle = 'FixedSingle'
+$form.FormBorderStyle = 'None'
 $form.MaximizeBox     = $false
 
-# Header
+$form.add_Shown({
+    Apply-Lang
+    Show-Screen 0
+    $rgn = [Win32]::CreateRoundRectRgn(0, 0, $form.Width + 1, $form.Height + 1, 20, 20)
+    [Win32]::SetWindowRgn($form.Handle, $rgn, $true) | Out-Null
+})
+
+
+# Header (logo) - adicionado primeiro para ficar abaixo da titlebar (Dock=Top empilha de baixo pra cima)
 $header = New-Object System.Windows.Forms.Panel
 $header.Dock      = 'Top'
 $header.Height    = 72
@@ -181,9 +199,55 @@ $header.Controls.Add($headerTitle)
 $headerSub = New-Label 'v1.0.0' 22 46 200 16 $fontSmall $fgMuted
 $header.Controls.Add($headerSub)
 
+# Titlebar customizada - adicionada por ultimo para ficar no topo
+$titleBar = New-Object System.Windows.Forms.Panel
+$titleBar.Dock      = 'Top'
+$titleBar.Height    = 36
+$titleBar.BackColor = $bgPanel
+$form.Controls.Add($titleBar)
+
+$titleLbl = New-Label 'Claude Remote Autostart' 14 9 320 18 $fontSmall $fgMuted
+$titleBar.Controls.Add($titleLbl)
+
+# Botao fechar
+$btnClose = New-Object System.Windows.Forms.Button
+$btnClose.Text      = 'x'
+$btnClose.Size      = New-Object System.Drawing.Size(36, 36)
+$btnClose.Location  = New-Object System.Drawing.Point(424, 0)
+$btnClose.FlatStyle = 'Flat'
+$btnClose.Font      = $fontUIB
+$btnClose.ForeColor = $fgMuted
+$btnClose.BackColor = $bgPanel
+$btnClose.FlatAppearance.BorderSize = 0
+$btnClose.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::FromArgb(180, 60, 40)
+$btnClose.Cursor    = [System.Windows.Forms.Cursors]::Hand
+$btnClose.add_Click({ $form.Close() })
+$titleBar.Controls.Add($btnClose)
+
+# Drag pela titlebar
+$script:dragStart = $null
+$titleBar.add_MouseDown({ param($s,$e) if ($e.Button -eq 'Left') { $script:dragStart = $e.Location } })
+$titleBar.add_MouseMove({
+    param($s,$e)
+    if ($script:dragStart -and $e.Button -eq 'Left') {
+        $form.Left += $e.X - $script:dragStart.X
+        $form.Top  += $e.Y - $script:dragStart.Y
+    }
+})
+$titleBar.add_MouseUp({ $script:dragStart = $null })
+$titleLbl.add_MouseDown({ param($s,$e) if ($e.Button -eq 'Left') { $script:dragStart = $e.Location } })
+$titleLbl.add_MouseMove({
+    param($s,$e)
+    if ($script:dragStart -and $e.Button -eq 'Left') {
+        $form.Left += $e.X - $script:dragStart.X
+        $form.Top  += $e.Y - $script:dragStart.Y
+    }
+})
+$titleLbl.add_MouseUp({ $script:dragStart = $null })
+
 # Dots
 $dotsPanel = New-Object System.Windows.Forms.Panel
-$dotsPanel.Location  = New-Object System.Drawing.Point(0, 72)
+$dotsPanel.Location  = New-Object System.Drawing.Point(0, 108)
 $dotsPanel.Size      = New-Object System.Drawing.Size(440, 18)
 $dotsPanel.BackColor = $bg
 $form.Controls.Add($dotsPanel)
@@ -205,7 +269,7 @@ function Set-Dots($active) {
 }
 Set-Dots 0
 
-$contentY = 90
+$contentY = 126
 function New-Screen {
     $p = New-Object System.Windows.Forms.Panel
     $p.Location  = New-Object System.Drawing.Point(0, $contentY)
@@ -218,7 +282,7 @@ function New-Screen {
 
 # Footer
 $footer = New-Object System.Windows.Forms.Panel
-$footer.Location  = New-Object System.Drawing.Point(0, 430)
+$footer.Location  = New-Object System.Drawing.Point(0, 466)
 $footer.Size      = New-Object System.Drawing.Size(444, 50)
 $footer.BackColor = $bgPanel
 $footer.add_Paint({
@@ -610,5 +674,5 @@ function Run-Install {
     Show-Screen 4
 }
 
-$form.Add_Shown({ Apply-Lang; Show-Screen 0 })
+
 [System.Windows.Forms.Application]::Run($form)
