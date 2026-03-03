@@ -8,6 +8,113 @@ $startupLnk = [System.IO.Path]::Combine([Environment]::GetFolderPath('Startup'),
 $scriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $alreadyInstalled = Test-Path "$installDir\claude-remote.vbs"
 
+# Strings por idioma
+$lang = @{}
+$lang['pt'] = @{
+    Title         = 'Claude Remote Autostart'
+    Subtitle      = 'Instalador  v1.0.0'
+    # Tela de idioma
+    LangTitle     = 'Escolha o idioma'
+    LangDesc      = 'Selecione o idioma do instalador.'
+    # Tela 1 - Requisitos
+    ReqTitle      = 'Requisitos'
+    ReqUpdate     = 'Atualizar Instalacao'
+    ReqDesc       = 'Verificando seu sistema antes da instalacao.'
+    ReqClaude     = 'Claude Code instalado'
+    ReqLogin      = 'Sessao iniciada'
+    ReqTrust      = 'Workspace confiavel'
+    ErrClaude     = "Claude Code nao encontrado.`nInstale em claude.ai/code e execute o instalador novamente."
+    ErrLogin      = "Nao esta logado.`nAbra um terminal e execute: claude login"
+    ErrTrust      = "Workspace nao configurado.`nAbra um terminal, va para sua pasta home, execute 'claude' e aceite o dialogo de confianca."
+    # Tela 2 - Slack
+    SlackTitle    = 'Notificacoes Slack  (opcional)'
+    SlackDesc     = "Receba a URL da sessao no Slack quando o servico iniciar.`nSlack e opcional - voce pode pular esta etapa."
+    SlackLabel    = 'URL do Incoming Webhook'
+    SlackHint     = 'Nao tem? Crie seu app em api.slack.com/apps'
+    SlackSkip     = 'Pular, configurar depois'
+    # Tela 3 - Instalando
+    InstTitle     = 'Instalando...'
+    InstDesc      = 'Copiando arquivos e configurando a inicializacao do Windows.'
+    InstFiles     = 'Copiando arquivos'
+    InstStartup   = 'Atalho de inicializacao'
+    InstSlack     = 'Webhook do Slack'
+    ErrSrcMissing = "Arquivos nao encontrados. Certifique-se de que todos os arquivos estao na mesma pasta que install.ps1"
+    # Tela 4 - Concluido
+    DoneTitle     = 'Instalacao concluida!'
+    DoneDesc      = "Claude Remote Autostart sera iniciado automaticamente`ncada vez que o Windows ligar."
+    DoneAt        = 'Instalado em'
+    DoneSlack     = 'Slack webhook'
+    DoneSlackVal  = 'Configurado'
+    # Botoes
+    BtnCheck      = 'Verificar >>'
+    BtnInstall    = 'Instalar >>'
+    BtnInstalling = 'Instalando...'
+    BtnClose      = 'Fechar'
+    BtnBack       = 'Voltar'
+    # Status
+    StFound       = 'Encontrado'
+    StNotFound    = 'Nao encontrado'
+    StOk          = 'OK'
+    StNotLogged   = 'Nao logado'
+    StTrusted     = 'Confiavel'
+    StNotTrusted  = 'Nao confiavel'
+    StSkipped     = 'Ignorado'
+    StDone        = 'Concluido'
+    StError       = 'Erro'
+    StConfigured  = 'Configurado'
+    StWaiting     = '...'
+}
+$lang['en'] = @{
+    Title         = 'Claude Remote Autostart'
+    Subtitle      = 'Installer  v1.0.0'
+    LangTitle     = 'Choose language'
+    LangDesc      = 'Select the installer language.'
+    ReqTitle      = 'Requirements'
+    ReqUpdate     = 'Update Installation'
+    ReqDesc       = 'Checking your system before installation.'
+    ReqClaude     = 'Claude Code installed'
+    ReqLogin      = 'Logged in to Claude'
+    ReqTrust      = 'Workspace trusted'
+    ErrClaude     = "Claude Code not found.`nInstall it from claude.ai/code and re-run the installer."
+    ErrLogin      = "Not logged in.`nOpen a terminal and run: claude login"
+    ErrTrust      = "Workspace not trusted.`nOpen a terminal, go to your home folder, run 'claude' and accept the trust dialog."
+    SlackTitle    = 'Slack Notifications  (optional)'
+    SlackDesc     = "Receive the session URL on Slack when the service starts.`nSlack is optional - you can skip this step."
+    SlackLabel    = 'Incoming Webhook URL'
+    SlackHint     = "Don't have one? Create your app at api.slack.com/apps"
+    SlackSkip     = 'Skip, configure later'
+    InstTitle     = 'Installing...'
+    InstDesc      = 'Copying files and configuring Windows Startup.'
+    InstFiles     = 'Copying files'
+    InstStartup   = 'Windows Startup shortcut'
+    InstSlack     = 'Slack webhook'
+    ErrSrcMissing = "Source files missing. Make sure all files are in the same folder as install.ps1"
+    DoneTitle     = 'Installation complete!'
+    DoneDesc      = "Claude Remote Autostart will launch automatically`nevery time Windows starts."
+    DoneAt        = 'Installed at'
+    DoneSlack     = 'Slack webhook'
+    DoneSlackVal  = 'Configured'
+    BtnCheck      = 'Check >>'
+    BtnInstall    = 'Install >>'
+    BtnInstalling = 'Installing...'
+    BtnClose      = 'Close'
+    BtnBack       = 'Back'
+    StFound       = 'Found'
+    StNotFound    = 'Not found'
+    StOk          = 'OK'
+    StNotLogged   = 'Not logged in'
+    StTrusted     = 'Trusted'
+    StNotTrusted  = 'Not trusted'
+    StSkipped     = 'Skipped'
+    StDone        = 'Done'
+    StError       = 'Error'
+    StConfigured  = 'Configured'
+    StWaiting     = '...'
+}
+
+$script:T = $lang['pt']  # padrao portugues
+
+# Cores
 $bg      = [System.Drawing.Color]::FromArgb(13,  17,  23)
 $bgPanel = [System.Drawing.Color]::FromArgb(22,  27,  34)
 $border  = [System.Drawing.Color]::FromArgb(48,  54,  61)
@@ -66,17 +173,19 @@ $header.Dock      = 'Top'
 $header.Height    = 70
 $header.BackColor = $bgPanel
 $form.Controls.Add($header)
-$header.Controls.Add((New-Label 'Claude Remote Autostart' 20 14 320 28 $fontTitle $fg))
-$header.Controls.Add((New-Label 'Installer  v1.0.0' 20 44 200 18 $fontSmall $fgMuted))
+$headerTitle = New-Label 'Claude Remote Autostart' 20 14 320 28 $fontTitle $fg
+$header.Controls.Add($headerTitle)
+$headerSub = New-Label 'v1.0.0' 20 44 200 18 $fontSmall $fgMuted
+$header.Controls.Add($headerSub)
 
-# Dots
+# Dots (5 agora: idioma + 4 telas)
 $dotsPanel = New-Object System.Windows.Forms.Panel
 $dotsPanel.Location  = New-Object System.Drawing.Point(0, 70)
 $dotsPanel.Size      = New-Object System.Drawing.Size(440, 20)
 $dotsPanel.BackColor = $bg
 $form.Controls.Add($dotsPanel)
 $dots = @()
-for ($i = 0; $i -lt 4; $i++) {
+for ($i = 0; $i -lt 5; $i++) {
     $d = New-Object System.Windows.Forms.Panel
     $d.Size      = New-Object System.Drawing.Size(8, 8)
     $d.Location  = New-Object System.Drawing.Point((20 + $i * 16), 6)
@@ -85,7 +194,7 @@ for ($i = 0; $i -lt 4; $i++) {
     $dots += $d
 }
 function Set-Dots($active) {
-    for ($i = 0; $i -lt 4; $i++) {
+    for ($i = 0; $i -lt 5; $i++) {
         if ($i -lt $active)    { $dots[$i].BackColor = $green }
         elseif ($i -eq $active){ $dots[$i].BackColor = $blue  }
         else                   { $dots[$i].BackColor = $border }
@@ -93,7 +202,7 @@ function Set-Dots($active) {
 }
 Set-Dots 0
 
-# Content area
+# Content
 $contentY = 90
 function New-Screen {
     $p = New-Object System.Windows.Forms.Panel
@@ -133,20 +242,60 @@ function New-Btn($text, $x, $primary=$true) {
     return $b
 }
 
-$btnBack = New-Btn 'Back'    20  $false
-$btnNext = New-Btn 'Next >>' 314 $true
+$btnBack = New-Btn 'Voltar' 20  $false
+$btnNext = New-Btn 'OK >>'  314 $true
 $btnBack.Visible = $false
 
-# Screen 0 - Requirements
+# ── Screen 0 - Idioma ────────────────────────────────────────────────────────
+$sLang = New-Screen
+$sLang.Visible = $true
+
+$sLangTitle = New-Label 'Escolha o idioma / Choose language' 20 10 400 26 $fontBold $fg
+$sLang.Controls.Add($sLangTitle)
+$sLangDesc = New-Label 'Selecione o idioma do instalador.' 20 40 400 18 $fontMain $fgMuted
+$sLang.Controls.Add($sLangDesc)
+
+function New-LangBtn($text, $sub, $y, $langKey) {
+    $p = New-Object System.Windows.Forms.Panel
+    $p.Location  = New-Object System.Drawing.Point(0, $y)
+    $p.Size      = New-Object System.Drawing.Size(440, 54)
+    $p.BackColor = $bgPanel
+    $p.Cursor    = [System.Windows.Forms.Cursors]::Hand
+
+    $lt = New-Label $text 16 8  400 22 $fontBold $fg
+    $ls = New-Label $sub  16 30 400 16 $fontSmall $fgMuted
+    $p.Controls.Add($lt)
+    $p.Controls.Add($ls)
+
+    $click = [scriptblock]::Create("
+        `$script:T = `$lang['$langKey']
+        Apply-Lang
+        Show-Screen 1
+        Run-Checks
+    ")
+    $p.add_Click($click)
+    $lt.add_Click($click)
+    $ls.add_Click($click)
+
+    $sLang.Controls.Add($p)
+    return $p
+}
+
+$btnPT = New-LangBtn 'Portugues (Brasil)' 'Instalar em portugues'  80 'pt'
+$btnEN = New-LangBtn 'English'            'Install in English'    142 'en'
+
+# Borda no PT por padrao
+$btnPT.BorderStyle = 'FixedSingle'
+
+# ── Screen 1 - Requisitos ────────────────────────────────────────────────────
 $s0 = New-Screen
-$s0.Visible = $true
 $s0Title = New-Label '' 20 10 400 26 $fontBold $fg
-$s0Title.Text = if ($alreadyInstalled) { 'Update Installation' } else { 'Requirements' }
 $s0.Controls.Add($s0Title)
-$s0.Controls.Add((New-Label 'Checking your system before installation.' 20 38 400 18 $fontMain $fgMuted))
-$stClaude = New-CheckRow $s0 'Claude Code installed'  70
-$stLogin  = New-CheckRow $s0 'Logged in to Claude'   116
-$stTrust  = New-CheckRow $s0 'Workspace trusted'     162
+$s0Desc = New-Label '' 20 38 400 18 $fontMain $fgMuted
+$s0.Controls.Add($s0Desc)
+$stClaude = New-CheckRow $s0 '' 70
+$stLogin  = New-CheckRow $s0 '' 116
+$stTrust  = New-CheckRow $s0 '' 162
 
 $alertBox = New-Object System.Windows.Forms.Panel
 $alertBox.Location  = New-Object System.Drawing.Point(0, 215)
@@ -164,19 +313,28 @@ function Show-Alert($msg, $color=$red) {
     $alertBox.BackColor = [System.Drawing.Color]::FromArgb(45,27,27)
     $alertBox.Visible   = $true
 }
+function Hide-Alert { $alertBox.Visible = $false }
 
 function Set-CheckStatus($lbl, $text, $color) {
     $lbl.Text      = $text
     $lbl.ForeColor = $color
 }
 
-# Screen 1 - Slack
-$s1 = New-Screen
-$s1.Controls.Add((New-Label 'Slack Notifications  (optional)' 20 10 380 26 $fontBold $fg))
-$s1.Controls.Add((New-Label "Receive the session URL on Slack when the service starts.`nSlack is optional - you can skip this step." 20 40 400 36 $fontMain $fgMuted))
-$s1.Controls.Add((New-Label 'Incoming Webhook URL' 20 90 200 20 $fontBold $fg))
+# Labels das check rows (para atualizar texto ao mudar idioma)
+$crClaudeLabel  = $s0.Controls[2].Controls[0]
+$crLoginLabel   = $s0.Controls[3].Controls[0]
+$crTrustLabel   = $s0.Controls[4].Controls[0]
 
-$hintLbl = New-Label "Don't have one? Create your app at api.slack.com/apps" 20 112 400 18 $fontSmall $blue
+# ── Screen 2 - Slack ─────────────────────────────────────────────────────────
+$s1 = New-Screen
+$s1Title  = New-Label '' 20 10 380 26 $fontBold $fg
+$s1Desc   = New-Label '' 20 40 400 36 $fontMain $fgMuted
+$s1Label  = New-Label '' 20 90 200 20 $fontBold $fg
+$s1.Controls.Add($s1Title)
+$s1.Controls.Add($s1Desc)
+$s1.Controls.Add($s1Label)
+
+$hintLbl = New-Label '' 20 112 400 18 $fontSmall $blue
 $hintLbl.Cursor = [System.Windows.Forms.Cursors]::Hand
 $hintLbl.add_Click({ Start-Process 'https://api.slack.com/apps' })
 $s1.Controls.Add($hintLbl)
@@ -190,23 +348,29 @@ $webhookBox.BorderStyle = 'FixedSingle'
 $webhookBox.Font        = $fontMono
 $s1.Controls.Add($webhookBox)
 
-$skipLbl = New-Label 'Skip, configure later' 20 170 200 18 $fontSmall $fgMuted
+$skipLbl = New-Label '' 20 170 200 18 $fontSmall $fgMuted
 $skipLbl.Cursor = [System.Windows.Forms.Cursors]::Hand
 $skipLbl.add_Click({
     $script:slackWebhook = ''
-    Show-Screen 2
+    Show-Screen 3
     $form.Refresh()
     Run-Install
 })
 $s1.Controls.Add($skipLbl)
 
-# Screen 2 - Installing
+# ── Screen 3 - Instalando ────────────────────────────────────────────────────
 $s2 = New-Screen
-$s2.Controls.Add((New-Label 'Installing...' 20 10 300 26 $fontBold $fg))
-$s2.Controls.Add((New-Label 'Copying files and configuring Windows Startup.' 20 38 400 18 $fontMain $fgMuted))
-$stFiles   = New-CheckRow $s2 'Copying files'             70
-$stStartup = New-CheckRow $s2 'Windows Startup shortcut' 116
-$stSlack   = New-CheckRow $s2 'Slack webhook'            162
+$s2Title = New-Label '' 20 10 300 26 $fontBold $fg
+$s2Desc  = New-Label '' 20 38 400 18 $fontMain $fgMuted
+$s2.Controls.Add($s2Title)
+$s2.Controls.Add($s2Desc)
+$stFiles   = New-CheckRow $s2 '' 70
+$stStartup = New-CheckRow $s2 '' 116
+$stSlack   = New-CheckRow $s2 '' 162
+
+$crFilesLabel   = $s2.Controls[2].Controls[0]
+$crStartupLabel = $s2.Controls[3].Controls[0]
+$crSlackLabel   = $s2.Controls[4].Controls[0]
 
 $alertInstall = New-Object System.Windows.Forms.Panel
 $alertInstall.Location  = New-Object System.Drawing.Point(0, 215)
@@ -218,18 +382,21 @@ $alertInstallLbl = New-Label '' 14 8 412 48 $fontSmall $red
 $alertInstallLbl.AutoSize = $false
 $alertInstall.Controls.Add($alertInstallLbl)
 
-# Screen 3 - Done
+# ── Screen 4 - Concluido ─────────────────────────────────────────────────────
 $s3 = New-Screen
-$s3.Controls.Add((New-Label 'Installation complete!' 20 30 400 30 $fontTitle $green))
-$s3.Controls.Add((New-Label "Claude Remote Autostart will launch automatically`nevery time Windows starts." 20 70 400 40 $fontMain $fgMuted))
+$s3Title = New-Label '' 20 30 400 30 $fontTitle $green
+$s3Desc  = New-Label '' 20 70 400 40 $fontMain $fgMuted
+$s3.Controls.Add($s3Title)
+$s3.Controls.Add($s3Desc)
 
 $infoPath = New-Object System.Windows.Forms.Panel
 $infoPath.Location  = New-Object System.Drawing.Point(0, 125)
 $infoPath.Size      = New-Object System.Drawing.Size(440, 36)
 $infoPath.BackColor = $bgPanel
 $s3.Controls.Add($infoPath)
-$infoPath.Controls.Add((New-Label 'Installed at' 14 8 100 20 $fontSmall $fgMuted))
+$infoAtLabel    = New-Label '' 14 8 100 20 $fontSmall $fgMuted
 $installPathLbl = New-Label $installDir 120 8 300 20 $fontMono $fg
+$infoPath.Controls.Add($infoAtLabel)
 $infoPath.Controls.Add($installPathLbl)
 
 $infoSlack = New-Object System.Windows.Forms.Panel
@@ -238,11 +405,53 @@ $infoSlack.Size      = New-Object System.Drawing.Size(440, 36)
 $infoSlack.BackColor = $bgPanel
 $infoSlack.Visible   = $false
 $s3.Controls.Add($infoSlack)
-$infoSlack.Controls.Add((New-Label 'Slack webhook' 14 8 120 20 $fontSmall $fgMuted))
-$infoSlack.Controls.Add((New-Label 'Configured' 140 8 200 20 $fontMain $green))
+$infoSlackLabel = New-Label '' 14 8 120 20 $fontSmall $fgMuted
+$infoSlackVal   = New-Label '' 140 8 200 20 $fontMain $green
+$infoSlack.Controls.Add($infoSlackLabel)
+$infoSlack.Controls.Add($infoSlackVal)
 
-# Navigation
-$screens = @($s0, $s1, $s2, $s3)
+# ── Aplicar idioma ───────────────────────────────────────────────────────────
+function Apply-Lang {
+    $T = $script:T
+    # Header
+    $headerSub.Text = $T.Subtitle
+    # Req screen
+    $s0Title.Text = if ($alreadyInstalled) { $T.ReqUpdate } else { $T.ReqTitle }
+    $s0Desc.Text  = $T.ReqDesc
+    $crClaudeLabel.Text  = $T.ReqClaude
+    $crLoginLabel.Text   = $T.ReqLogin
+    $crTrustLabel.Text   = $T.ReqTrust
+    # Slack screen
+    $s1Title.Text  = $T.SlackTitle
+    $s1Desc.Text   = $T.SlackDesc
+    $s1Label.Text  = $T.SlackLabel
+    $hintLbl.Text  = $T.SlackHint
+    $skipLbl.Text  = $T.SlackSkip
+    # Install screen
+    $s2Title.Text          = $T.InstTitle
+    $s2Desc.Text           = $T.InstDesc
+    $crFilesLabel.Text     = $T.InstFiles
+    $crStartupLabel.Text   = $T.InstStartup
+    $crSlackLabel.Text     = $T.InstSlack
+    # Done screen
+    $s3Title.Text        = $T.DoneTitle
+    $s3Desc.Text         = $T.DoneDesc
+    $infoAtLabel.Text    = $T.DoneAt
+    $infoSlackLabel.Text = $T.DoneSlack
+    $infoSlackVal.Text   = $T.DoneSlackVal
+    # Botoes
+    $btnBack.Text = $T.BtnBack
+    # Status placeholders
+    $stClaude.Text  = $T.StWaiting
+    $stLogin.Text   = $T.StWaiting
+    $stTrust.Text   = $T.StWaiting
+    $stFiles.Text   = $T.StWaiting
+    $stStartup.Text = $T.StWaiting
+    $stSlack.Text   = $T.StWaiting
+}
+
+# ── Navegacao ────────────────────────────────────────────────────────────────
+$screens = @($sLang, $s0, $s1, $s2, $s3)
 $script:currentScreen = 0
 $script:slackWebhook  = ''
 $script:checksOk      = $false
@@ -252,56 +461,80 @@ function Show-Screen($n) {
     $screens[$n].Visible = $true
     $script:currentScreen = $n
     Set-Dots $n
+    $T = $script:T
     switch ($n) {
         0 {
             $btnBack.Visible   = $false
-            $btnNext.Text      = 'Check >>'
-            $btnNext.BackColor = [System.Drawing.Color]::FromArgb(35,134,54)
-            $btnNext.Enabled   = $script:checksOk
+            $btnNext.Text      = 'PT / EN'
+            $btnNext.Enabled   = $false
+            $btnNext.BackColor = [System.Drawing.Color]::FromArgb(33,38,45)
         }
         1 {
             $btnBack.Visible   = $true
-            $btnNext.Text      = 'Install >>'
-            $btnNext.Enabled   = $true
+            $btnNext.Text      = $T.BtnCheck
+            $btnNext.BackColor = [System.Drawing.Color]::FromArgb(35,134,54)
+            $btnNext.Enabled   = $script:checksOk
         }
         2 {
-            $btnBack.Visible   = $false
-            $btnNext.Text      = 'Installing...'
-            $btnNext.Enabled   = $false
+            $btnBack.Visible   = $true
+            $btnNext.Text      = $T.BtnInstall
+            $btnNext.BackColor = [System.Drawing.Color]::FromArgb(35,134,54)
+            $btnNext.Enabled   = $true
         }
         3 {
             $btnBack.Visible   = $false
-            $btnNext.Text      = 'Close'
+            $btnNext.Text      = $T.BtnInstalling
+            $btnNext.Enabled   = $false
+        }
+        4 {
+            $btnBack.Visible   = $false
+            $btnNext.Text      = $T.BtnClose
             $btnNext.BackColor = [System.Drawing.Color]::FromArgb(31,111,235)
             $btnNext.Enabled   = $true
         }
     }
 }
 
-$btnBack.add_Click({ if ($script:currentScreen -eq 1) { Show-Screen 0 } })
+$btnBack.add_Click({
+    switch ($script:currentScreen) {
+        1 {
+            # Volta para selecao de idioma, reseta checks
+            $script:checksOk = $false
+            $stClaude.Text = $script:T.StWaiting; $stClaude.ForeColor = $fgMuted
+            $stLogin.Text  = $script:T.StWaiting; $stLogin.ForeColor  = $fgMuted
+            $stTrust.Text  = $script:T.StWaiting; $stTrust.ForeColor  = $fgMuted
+            Hide-Alert
+            Show-Screen 0
+        }
+        2 { Show-Screen 1 }
+    }
+})
 $btnNext.add_Click({
     switch ($script:currentScreen) {
-        0 { if ($script:checksOk) { Show-Screen 1 } }
-        1 {
+        1 { if ($script:checksOk) { Show-Screen 2 } }
+        2 {
             $script:slackWebhook = $webhookBox.Text.Trim()
-            Show-Screen 2
+            Show-Screen 3
             $form.Refresh()
             Run-Install
         }
-        3 { $form.Close() }
+        4 { $form.Close() }
     }
 })
 
-# Checks
+# ── Checks ───────────────────────────────────────────────────────────────────
 function Run-Checks {
+    $T = $script:T
+    Hide-Alert
+
     if (-not (Test-Path $claudePath)) {
-        Set-CheckStatus $stClaude 'Not found' $red
-        Set-CheckStatus $stLogin  'Skipped'   $fgMuted
-        Set-CheckStatus $stTrust  'Skipped'   $fgMuted
-        Show-Alert "Claude Code not found.`nInstall it from claude.ai/code and re-run."
+        Set-CheckStatus $stClaude $T.StNotFound $red
+        Set-CheckStatus $stLogin  $T.StSkipped  $fgMuted
+        Set-CheckStatus $stTrust  $T.StSkipped  $fgMuted
+        Show-Alert $T.ErrClaude
         return
     }
-    Set-CheckStatus $stClaude 'Found' $green
+    Set-CheckStatus $stClaude $T.StFound $green
 
     $tmp    = "$env:TEMP\claude-check-$PID.tmp"
     $tmpErr = "$env:TEMP\claude-check-$PID.err"
@@ -314,12 +547,12 @@ function Run-Checks {
     Remove-Item $tmp, $tmpErr -ErrorAction SilentlyContinue
 
     if ($out -match 'not logged|please login') {
-        Set-CheckStatus $stLogin 'Not logged in' $red
-        Set-CheckStatus $stTrust 'Skipped'       $fgMuted
-        Show-Alert "Not logged in.`nOpen a terminal and run: claude login"
+        Set-CheckStatus $stLogin $T.StNotLogged $red
+        Set-CheckStatus $stTrust $T.StSkipped   $fgMuted
+        Show-Alert $T.ErrLogin
         return
     }
-    Set-CheckStatus $stLogin 'OK' $green
+    Set-CheckStatus $stLogin $T.StOk $green
 
     $trusted  = $false
     $clauJson = "$userHome\.claude.json"
@@ -331,11 +564,11 @@ function Run-Checks {
         } catch {}
     }
     if (-not $trusted) {
-        Set-CheckStatus $stTrust 'Not trusted' $red
-        Show-Alert "Workspace not trusted.`nOpen a terminal, run 'claude' in your home folder and accept the trust dialog." $yellow
+        Set-CheckStatus $stTrust $T.StNotTrusted $red
+        Show-Alert $T.ErrTrust $yellow
         return
     }
-    Set-CheckStatus $stTrust 'Trusted' $green
+    Set-CheckStatus $stTrust $T.StTrusted $green
 
     $script:checksOk = $true
     $btnNext.Enabled = $true
@@ -350,14 +583,15 @@ function Run-Checks {
     }
 }
 
-# Install
+# ── Install ──────────────────────────────────────────────────────────────────
 function Run-Install {
+    $T = $script:T
     $vbsSrc  = "$scriptDir\claude-remote.vbs"
     $ps1Src  = "$scriptDir\claude-remote-start.ps1"
     $traySrc = "$scriptDir\claude-remote-tray.ps1"
 
     if (-not (Test-Path $vbsSrc) -or -not (Test-Path $ps1Src) -or -not (Test-Path $traySrc)) {
-        $alertInstallLbl.Text = "Source files missing. Make sure all files are in the same folder as install.ps1"
+        $alertInstallLbl.Text = $T.ErrSrcMissing
         $alertInstall.Visible = $true
         $btnNext.Enabled      = $true
         return
@@ -368,10 +602,10 @@ function Run-Install {
         Copy-Item $vbsSrc  "$installDir\claude-remote.vbs"       -Force
         Copy-Item $ps1Src  "$installDir\claude-remote-start.ps1" -Force
         Copy-Item $traySrc "$installDir\claude-remote-tray.ps1"  -Force
-        Set-CheckStatus $stFiles 'Done' $green
+        Set-CheckStatus $stFiles $T.StDone $green
     } catch {
-        Set-CheckStatus $stFiles 'Error' $red
-        $alertInstallLbl.Text = "Failed to copy files: $_"
+        Set-CheckStatus $stFiles $T.StError $red
+        $alertInstallLbl.Text = "$($T.StError): $_"
         $alertInstall.Visible = $true
         $btnNext.Enabled      = $true
         return
@@ -398,25 +632,26 @@ function Run-Install {
         $lnk.TargetPath       = "$installDir\claude-remote.vbs"
         $lnk.WorkingDirectory = $installDir
         $lnk.Save()
-        Set-CheckStatus $stStartup 'Done' $green
+        Set-CheckStatus $stStartup $T.StDone $green
     } catch {
-        Set-CheckStatus $stStartup 'Error' $red
+        Set-CheckStatus $stStartup $T.StError $red
     }
 
     if ($script:slackWebhook -match 'hooks\.slack\.com') {
-        Set-CheckStatus $stSlack 'Configured' $green
+        Set-CheckStatus $stSlack $T.StConfigured $green
         $infoSlack.Visible = $true
     } else {
-        Set-CheckStatus $stSlack 'Skipped' $fgMuted
+        Set-CheckStatus $stSlack $T.StSkipped $fgMuted
     }
 
     $installPathLbl.Text = $installDir
-    Show-Screen 3
+    Show-Screen 4
 }
 
+# ── Start ────────────────────────────────────────────────────────────────────
 $form.Add_Shown({
-    $btnNext.Enabled = $false
-    Run-Checks
+    Apply-Lang
+    Show-Screen 0
 })
 
 [System.Windows.Forms.Application]::Run($form)
