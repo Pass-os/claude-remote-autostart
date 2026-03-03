@@ -21,7 +21,7 @@ $lang['pt'] = @{
     ReqTrust      = 'Workspace confiavel'
     ErrClaude     = "Claude Code nao encontrado.`nInstale em claude.ai/code e execute o instalador novamente."
     ErrLogin      = "Nao esta logado.`nAbra um terminal e execute: claude login"
-    ErrTrust      = "Workspace nao configurado.`nAbra um terminal, va para sua pasta home, execute 'claude' e aceite o dialogo."
+    ErrTrust      = "Workspace nao configurado. Abra um terminal (cmd ou PowerShell) e execute:`n  cd %USERPROFILE%`n  claude`nAceite o dialogo de confianca que aparecer."
     SlackTitle    = 'Notificacoes Slack'
     SlackOpt      = '(opcional)'
     SlackDesc     = "Receba a URL da sessao no Slack quando o servico iniciar.`nSlack e opcional - voce pode pular esta etapa."
@@ -68,7 +68,7 @@ $lang['en'] = @{
     ReqTrust      = 'Workspace trusted'
     ErrClaude     = "Claude Code not found.`nInstall it from claude.ai/code and re-run the installer."
     ErrLogin      = "Not logged in.`nOpen a terminal and run: claude login"
-    ErrTrust      = "Workspace not trusted.`nOpen a terminal, go to your home folder, run 'claude' and accept the trust dialog."
+    ErrTrust      = "Workspace not trusted. Open a terminal (cmd or PowerShell) and run:`n  cd %USERPROFILE%`n  claude`nAccept the trust dialog that appears."
     SlackTitle    = 'Slack Notifications'
     SlackOpt      = '(optional)'
     SlackDesc     = "Receive the session URL on Slack when the service starts.`nSlack is optional - you can skip this step."
@@ -375,11 +375,11 @@ $crTrustLabel  = $s0.Controls[4].Controls[0]
 
 $alertBox = New-Object System.Windows.Forms.Panel
 $alertBox.Location  = New-Object System.Drawing.Point(0, 202)
-$alertBox.Size      = New-Object System.Drawing.Size(440, 56)
+$alertBox.Size      = New-Object System.Drawing.Size(440, 80)
 $alertBox.BackColor = [System.Drawing.Color]::FromArgb(55, 35, 25)
 $alertBox.Visible   = $false
 $s0.Controls.Add($alertBox)
-$alertLbl = New-Label '' 16 8 410 44 $fontSmall $red
+$alertLbl = New-Label '' 16 8 410 68 $fontSmall $red
 $alertLbl.AutoSize = $false
 $alertBox.Controls.Add($alertLbl)
 
@@ -616,10 +616,12 @@ function Run-Checks {
         } catch {}
     }
     if (-not $trusted) {
-        Set-CheckStatus $stTrust $T.StNotTrusted $red
-        Show-Alert $T.ErrTrust $yellow; return
+        Set-CheckStatus $stTrust $T.StNotTrusted $yellow
+        $msg = $T.ErrTrust -replace '%USERPROFILE%', $userHome
+        Show-Alert $msg $yellow
+    } else {
+        Set-CheckStatus $stTrust $T.StTrusted $green
     }
-    Set-CheckStatus $stTrust $T.StTrusted $green
     $script:checksOk = $true; $btnNext.Enabled = $true
 
     if ($alreadyInstalled) {
