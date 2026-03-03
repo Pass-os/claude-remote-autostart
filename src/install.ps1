@@ -21,7 +21,7 @@ $lang['pt'] = @{
     ReqTrust      = 'Workspace confiavel'
     ErrClaude     = "Claude Code nao encontrado.`nInstale em claude.ai/code e execute o instalador novamente."
     ErrLogin      = "Nao esta logado.`nAbra um terminal e execute: claude login"
-    ErrTrust      = "Workspace nao configurado. Abra um terminal (cmd ou PowerShell) e execute:`n  cd %USERPROFILE%`n  claude`nAceite o dialogo de confianca que aparecer."
+    ErrTrust      = "Workspace ainda nao configurado - sera configurado automaticamente durante a instalacao."
     SlackTitle    = 'Notificacoes Slack'
     SlackOpt      = '(opcional)'
     SlackDesc     = "Receba a URL da sessao no Slack quando o servico iniciar.`nSlack e opcional - voce pode pular esta etapa."
@@ -68,7 +68,7 @@ $lang['en'] = @{
     ReqTrust      = 'Workspace trusted'
     ErrClaude     = "Claude Code not found.`nInstall it from claude.ai/code and re-run the installer."
     ErrLogin      = "Not logged in.`nOpen a terminal and run: claude login"
-    ErrTrust      = "Workspace not trusted. Open a terminal (cmd or PowerShell) and run:`n  cd %USERPROFILE%`n  claude`nAccept the trust dialog that appears."
+    ErrTrust      = "Workspace not yet configured - will be configured automatically during installation."
     SlackTitle    = 'Slack Notifications'
     SlackOpt      = '(optional)'
     SlackDesc     = "Receive the session URL on Slack when the service starts.`nSlack is optional - you can skip this step."
@@ -658,6 +658,28 @@ function Run-Install {
             [System.IO.File]::WriteAllText("$installDir\claude-remote.vbs", $c, $utf8NoBom)
         } catch {}
     }
+    # Aceita o trust do workspace automaticamente no .claude.json
+    try {
+        $claudeJson = "$userHome\.claude.json"
+        $key = $userHome -replace '\\', '/'
+        if (Test-Path $claudeJson) {
+            $j = Get-Content $claudeJson -Raw | ConvertFrom-Json
+        } else {
+            $j = [PSCustomObject]@{}
+        }
+        if (-not $j.PSObject.Properties['projects']) {
+            $j | Add-Member -MemberType NoteProperty -Name 'projects' -Value ([PSCustomObject]@{})
+        }
+        if (-not $j.projects.PSObject.Properties[$key]) {
+            $j.projects | Add-Member -MemberType NoteProperty -Name $key -Value ([PSCustomObject]@{})
+        }
+        if (-not $j.projects.$key.PSObject.Properties['hasTrustDialogAccepted']) {
+            $j.projects.$key | Add-Member -MemberType NoteProperty -Name 'hasTrustDialogAccepted' -Value $true
+        } else {
+            $j.projects.$key.hasTrustDialogAccepted = $true
+        }
+        [System.IO.File]::WriteAllText($claudeJson, ($j | ConvertTo-Json -Depth 10), $utf8NoBom)
+    } catch {}
     try {
         $wsh = New-Object -ComObject WScript.Shell
         $lnk = $wsh.CreateShortcut($startupLnk)
