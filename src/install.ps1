@@ -634,17 +634,19 @@ function Run-Checks {
 
 function Run-Install {
     $T = $script:T
-    $vbsSrc  = "$scriptDir\claude-remote.vbs"
-    $ps1Src  = "$scriptDir\claude-remote-start.ps1"
-    $traySrc = "$scriptDir\claude-remote-tray.ps1"
+    $vbsSrc     = "$scriptDir\claude-remote.vbs"
+    $ps1Src     = "$scriptDir\claude-remote-start.ps1"
+    $traySrc    = "$scriptDir\claude-remote-tray.ps1"
+    $notifySrc  = "$scriptDir\claude-remote-notify.ps1"
     if (-not (Test-Path $vbsSrc) -or -not (Test-Path $ps1Src) -or -not (Test-Path $traySrc)) {
         $alertInstallLbl.Text = $T.ErrSrcMissing; $alertInstall.Visible = $true; return
     }
     try {
         if (-not (Test-Path $installDir)) { New-Item -ItemType Directory -Path $installDir | Out-Null }
-        Copy-Item $vbsSrc  "$installDir\claude-remote.vbs"       -Force
-        Copy-Item $ps1Src  "$installDir\claude-remote-start.ps1" -Force
-        Copy-Item $traySrc "$installDir\claude-remote-tray.ps1"  -Force
+        Copy-Item $vbsSrc  "$installDir\claude-remote.vbs"        -Force
+        Copy-Item $ps1Src  "$installDir\claude-remote-start.ps1"  -Force
+        Copy-Item $traySrc "$installDir\claude-remote-tray.ps1"   -Force
+        if (Test-Path $notifySrc) { Copy-Item $notifySrc "$installDir\claude-remote-notify.ps1" -Force }
         Set-CheckStatus $stFiles $T.StDone $green
     } catch {
         Set-CheckStatus $stFiles $T.StError $red

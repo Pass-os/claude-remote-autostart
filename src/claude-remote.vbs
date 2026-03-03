@@ -187,6 +187,18 @@ Else
 End If
 SendSlack slackMsg
 
+' --- Notificacao toast do Windows ---
+Dim notifyScript, toastBody
+notifyScript = userHome & "\claude-remote\claude-remote-notify.ps1"
+If sessionUrl <> "" Then
+    toastBody = "Sessao iniciada com sucesso."
+Else
+    toastBody = "Servico iniciado com sucesso."
+End If
+If fso.FileExists(notifyScript) Then
+    WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & notifyScript & """ -Body """ & toastBody & """", 0, False
+End If
+
 ' --- Inicia icone na bandeja ---
 Dim trayScript
 trayScript = userHome & "\claude-remote\claude-remote-tray.ps1"
