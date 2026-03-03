@@ -10,7 +10,7 @@ if (Test-Path $pidFile) { Remove-Item $pidFile -Force }
 $p = Start-Process `
     -FilePath "$userHome\.local\bin\claude.exe" `
     -ArgumentList "remote-control", "--permission-mode", "bypassPermissions" `
-    -WorkingDirectory $userHome `
+    -WorkingDirectory "$userHome\claude-remote" `
     -RedirectStandardOutput $outputFile `
     -WindowStyle Hidden `
     -PassThru

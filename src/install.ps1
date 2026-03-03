@@ -658,11 +658,11 @@ function Run-Install {
             [System.IO.File]::WriteAllText("$installDir\claude-remote.vbs", $c, $utf8NoBom)
         } catch {}
     }
-    # Aceita o trust do workspace rodando claude -p na pasta home
+    # Aceita o trust do workspace da pasta de instalacao
     try {
         $tmp = "$env:TEMP\claude-trust-$PID.txt"
         Start-Process -FilePath $claudePath -ArgumentList '-p', '""' `
-            -WorkingDirectory $userHome `
+            -WorkingDirectory $installDir `
             -RedirectStandardOutput $tmp -RedirectStandardError "$tmp.err" `
             -WindowStyle Hidden -Wait -ErrorAction SilentlyContinue
         Remove-Item $tmp, "$tmp.err" -ErrorAction SilentlyContinue
