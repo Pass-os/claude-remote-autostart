@@ -658,27 +658,14 @@ function Run-Install {
             [System.IO.File]::WriteAllText("$installDir\claude-remote.vbs", $c, $utf8NoBom)
         } catch {}
     }
-    # Aceita o trust do workspace automaticamente no .claude.json
+    # Aceita o trust do workspace rodando claude -p na pasta home
     try {
-        $claudeJson = "$userHome\.claude.json"
-        $key = $userHome -replace '\\', '/'
-        if (Test-Path $claudeJson) {
-            $j = Get-Content $claudeJson -Raw | ConvertFrom-Json
-        } else {
-            $j = [PSCustomObject]@{}
-        }
-        if (-not $j.PSObject.Properties['projects']) {
-            $j | Add-Member -MemberType NoteProperty -Name 'projects' -Value ([PSCustomObject]@{})
-        }
-        if (-not $j.projects.PSObject.Properties[$key]) {
-            $j.projects | Add-Member -MemberType NoteProperty -Name $key -Value ([PSCustomObject]@{})
-        }
-        if (-not $j.projects.$key.PSObject.Properties['hasTrustDialogAccepted']) {
-            $j.projects.$key | Add-Member -MemberType NoteProperty -Name 'hasTrustDialogAccepted' -Value $true
-        } else {
-            $j.projects.$key.hasTrustDialogAccepted = $true
-        }
-        [System.IO.File]::WriteAllText($claudeJson, ($j | ConvertTo-Json -Depth 10), $utf8NoBom)
+        $tmp = "$env:TEMP\claude-trust-$PID.txt"
+        Start-Process -FilePath $claudePath -ArgumentList '-p', '""' `
+            -WorkingDirectory $userHome `
+            -RedirectStandardOutput $tmp -RedirectStandardError "$tmp.err" `
+            -WindowStyle Hidden -Wait -ErrorAction SilentlyContinue
+        Remove-Item $tmp, "$tmp.err" -ErrorAction SilentlyContinue
     } catch {}
     try {
         $wsh = New-Object -ComObject WScript.Shell
