@@ -177,6 +177,13 @@ Else
     SendSlack ":computer: *SOFTLIVE VM* - Remote Control ativo!"
 End If
 
+' --- Inicia icone na bandeja ---
+Dim trayScript
+trayScript = userHome & "\claude-remote\claude-remote-tray.ps1"
+If fso.FileExists(trayScript) Then
+    WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & trayScript & """ -SessionUrl """ & sessionUrl & """", 0, False
+End If
+
 ' --- Remove lock ---
 On Error Resume Next
 fso.DeleteFile lockFile

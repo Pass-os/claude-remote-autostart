@@ -79,23 +79,26 @@ End If
 If Not fso.FolderExists(installDir) Then fso.CreateFolder installDir
 
 ' --- Copia os arquivos ---
-Dim vbsDest, ps1Dest
-vbsDest = installDir & "\claude-remote.vbs"
-ps1Dest = installDir & "\claude-remote-start.ps1"
+Dim vbsDest, ps1Dest, trayDest
+vbsDest  = installDir & "\claude-remote.vbs"
+ps1Dest  = installDir & "\claude-remote-start.ps1"
+trayDest = installDir & "\claude-remote-tray.ps1"
 
-Dim vbsSrc, ps1Src
-vbsSrc = scriptDir & "\claude-remote.vbs"
-ps1Src = scriptDir & "\claude-remote-start.ps1"
+Dim vbsSrc, ps1Src, traySrc
+vbsSrc  = scriptDir & "\claude-remote.vbs"
+ps1Src  = scriptDir & "\claude-remote-start.ps1"
+traySrc = scriptDir & "\claude-remote-tray.ps1"
 
-If Not fso.FileExists(vbsSrc) Or Not fso.FileExists(ps1Src) Then
+If Not fso.FileExists(vbsSrc) Or Not fso.FileExists(ps1Src) Or Not fso.FileExists(traySrc) Then
     MsgBox "Arquivos do instalador nao encontrados." & vbCrLf & vbCrLf & _
-        "Certifique-se de que claude-remote.vbs e claude-remote-start.ps1 estao na mesma pasta que o instalador.", _
+        "Certifique-se de que todos os arquivos estao na mesma pasta que o instalador.", _
         vbCritical, "Arquivos nao encontrados"
     WScript.Quit
 End If
 
-fso.CopyFile vbsSrc, vbsDest, True
-fso.CopyFile ps1Src, ps1Dest, True
+fso.CopyFile vbsSrc,  vbsDest,  True
+fso.CopyFile ps1Src,  ps1Dest,  True
+fso.CopyFile traySrc, trayDest, True
 
 ' --- Substitui webhook e paths no vbs copiado ---
 Dim tsVbs, vbsContent
