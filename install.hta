@@ -17,112 +17,123 @@
     WINDOWSTATE="normal"
 />
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
 
     body {
-        font-family: 'Segoe UI', sans-serif;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
         background: #0d1117;
         color: #e6edf3;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
+        font-size: 13px;
     }
 
-    .header {
-        background: linear-gradient(135deg, #161b22, #1c2128);
+    #header {
+        background: #161b22;
         border-bottom: 1px solid #30363d;
-        padding: 28px 32px 24px;
+        padding: 20px 28px 16px;
         text-align: center;
     }
 
-    .header .logo {
-        font-size: 28px;
-        font-weight: 700;
+    #header .logo {
+        font-size: 22px;
+        font-weight: bold;
         color: #e6edf3;
-        letter-spacing: -0.5px;
     }
 
-    .header .logo span {
-        color: #58a6ff;
+    #header .logo-accent { color: #58a6ff; }
+
+    #header .subtitle {
+        margin-top: 4px;
+        font-size: 11px;
+        color: #6e7681;
     }
 
-    .header .subtitle {
-        margin-top: 6px;
-        font-size: 13px;
-        color: #8b949e;
+    #dots {
+        padding: 14px 28px 0;
+        height: 24px;
     }
 
-    .content {
-        flex: 1;
-        padding: 28px 32px;
-        overflow-y: auto;
-    }
-
-    .steps {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 28px;
-    }
-
-    .step-dot {
-        width: 8px;
-        height: 8px;
+    .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
         background: #30363d;
-        transition: background 0.3s;
+        margin-right: 5px;
     }
 
-    .step-dot.active { background: #58a6ff; }
-    .step-dot.done { background: #3fb950; }
+    .dot-active { background: #58a6ff; }
+    .dot-done   { background: #3fb950; }
+
+    #content {
+        padding: 16px 28px 12px;
+    }
 
     .screen { display: none; }
-    .screen.active { display: block; }
+    .screen-active { display: block; }
 
     .screen-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: bold;
+        margin-bottom: 5px;
         color: #e6edf3;
     }
 
     .screen-desc {
-        font-size: 13px;
+        font-size: 12px;
         color: #8b949e;
-        line-height: 1.6;
-        margin-bottom: 24px;
+        line-height: 1.5;
+        margin-bottom: 16px;
     }
 
-    .check-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 16px;
+    .badge {
+        font-size: 10px;
+        padding: 1px 7px;
+        background: #1c2128;
+        border: 1px solid #30363d;
+        color: #6e7681;
+    }
+
+    .check-row {
+        padding: 10px 14px;
         background: #161b22;
         border: 1px solid #30363d;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        font-size: 13px;
+        margin-bottom: 8px;
     }
 
-    .check-item .icon {
-        font-size: 16px;
-        width: 20px;
-        text-align: center;
-        flex-shrink: 0;
+    .check-label {
+        font-size: 12px;
+        color: #c9d1d9;
     }
 
-    .check-item .label { flex: 1; color: #c9d1d9; }
-    .check-item .status { font-size: 12px; color: #8b949e; }
-    .check-item.ok .status { color: #3fb950; }
-    .check-item.fail .status { color: #f85149; }
-    .check-item.checking .status { color: #d29922; }
+    .check-status {
+        float: right;
+        font-size: 11px;
+        color: #6e7681;
+    }
+
+    .status-ok      { color: #3fb950; }
+    .status-fail    { color: #f85149; }
+    .status-wait    { color: #d29922; }
+
+    .alert {
+        padding: 10px 14px;
+        font-size: 12px;
+        margin-top: 10px;
+        border: 1px solid #30363d;
+        display: none;
+        line-height: 1.5;
+    }
+
+    .alert-error   { background: #2d1b1b; border-color: #f85149; color: #ffa198; display: block; }
+    .alert-warning { background: #2d2616; border-color: #d29922; color: #e3b341; display: block; }
+    .alert-success { background: #1b2d1b; border-color: #3fb950; color: #56d364; display: block; }
 
     .field-label {
-        font-size: 13px;
-        font-weight: 500;
+        font-size: 12px;
+        font-weight: bold;
         color: #c9d1d9;
-        margin-bottom: 8px;
         display: block;
+        margin-bottom: 6px;
     }
 
     .field-hint {
@@ -133,40 +144,22 @@
 
     .field-hint a {
         color: #58a6ff;
-        text-decoration: none;
+        text-decoration: underline;
         cursor: pointer;
     }
 
-    input[type=text] {
+    input {
         width: 100%;
-        padding: 10px 14px;
+        padding: 8px 12px;
         background: #161b22;
         border: 1px solid #30363d;
-        border-radius: 6px;
         color: #e6edf3;
-        font-size: 13px;
-        font-family: 'Segoe UI', sans-serif;
-        outline: none;
-    }
-
-    input[type=text]:focus {
-        border-color: #58a6ff;
-    }
-
-    .optional-badge {
-        display: inline-block;
-        font-size: 10px;
-        padding: 2px 8px;
-        background: #1c2128;
-        border: 1px solid #30363d;
-        border-radius: 20px;
-        color: #6e7681;
-        margin-left: 8px;
-        vertical-align: middle;
+        font-size: 12px;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
     }
 
     .skip-link {
-        font-size: 12px;
+        font-size: 11px;
         color: #6e7681;
         cursor: pointer;
         text-decoration: underline;
@@ -174,118 +167,100 @@
         margin-top: 10px;
     }
 
-    .skip-link:hover { color: #8b949e; }
-
-    .alert {
-        padding: 12px 16px;
-        border-radius: 6px;
-        font-size: 13px;
-        margin-bottom: 16px;
-        display: none;
+    .success-block {
+        text-align: center;
+        padding: 10px 0 16px;
     }
-
-    .alert.error { background: #2d1b1b; border: 1px solid #f85149; color: #ffa198; display: block; }
-    .alert.success { background: #1b2d1b; border: 1px solid #3fb950; color: #56d364; display: block; }
-    .alert.warning { background: #2d2616; border: 1px solid #d29922; color: #e3b341; display: block; }
-
-    .footer {
-        padding: 16px 32px;
-        border-top: 1px solid #30363d;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #161b22;
-    }
-
-    .btn {
-        padding: 9px 20px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        border: none;
-        font-family: 'Segoe UI', sans-serif;
-        transition: opacity 0.2s;
-    }
-
-    .btn:hover { opacity: 0.85; }
-    .btn:disabled { opacity: 0.4; cursor: default; }
-
-    .btn-primary { background: #238636; color: #fff; }
-    .btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
-    .btn-blue { background: #1f6feb; color: #fff; }
 
     .success-icon {
-        text-align: center;
-        font-size: 52px;
-        margin: 16px 0 20px;
+        font-size: 36px;
+        color: #3fb950;
+        margin-bottom: 8px;
     }
 
     .success-title {
-        text-align: center;
-        font-size: 22px;
-        font-weight: 700;
+        font-size: 18px;
+        font-weight: bold;
         color: #3fb950;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .success-desc {
-        text-align: center;
-        font-size: 13px;
+        font-size: 12px;
         color: #8b949e;
-        line-height: 1.7;
+        line-height: 1.6;
     }
 
     .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 14px;
+        padding: 8px 14px;
         background: #161b22;
         border: 1px solid #30363d;
-        border-radius: 6px;
-        margin-top: 16px;
-        font-size: 12px;
+        margin-top: 10px;
+        font-size: 11px;
     }
 
-    .info-row .key { color: #6e7681; }
-    .info-row .val { color: #c9d1d9; font-family: monospace; }
+    .info-key { color: #6e7681; }
+    .info-val { color: #c9d1d9; font-family: monospace; float: right; }
+
+    #footer {
+        padding: 12px 28px;
+        border-top: 1px solid #30363d;
+        background: #161b22;
+        text-align: right;
+    }
+
+    .btn {
+        padding: 7px 18px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        margin-left: 8px;
+    }
+
+    .btn-primary  { background: #238636; color: #fff; }
+    .btn-secondary{ background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+    .btn-blue     { background: #1f6feb; color: #fff; }
+
+    .btn:disabled { opacity: 0.4; cursor: default; }
 </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="logo">Claude <span>Remote</span> Autostart</div>
-    <div class="subtitle">Installer &nbsp;·&nbsp; v1.0.0</div>
+<div id="header">
+    <div class="logo">Claude <span class="logo-accent">Remote</span> Autostart</div>
+    <div class="subtitle">Installer &middot; v1.0.0</div>
 </div>
 
-<div class="content">
+<div id="dots">
+    <span class="dot dot-active" id="dot0"></span>
+    <span class="dot" id="dot1"></span>
+    <span class="dot" id="dot2"></span>
+    <span class="dot" id="dot3"></span>
+</div>
 
-    <div class="steps">
-        <div class="step-dot active" id="dot0"></div>
-        <div class="step-dot" id="dot1"></div>
-        <div class="step-dot" id="dot2"></div>
-        <div class="step-dot" id="dot3"></div>
-    </div>
+<div id="content">
 
-    <!-- SCREEN 0: Welcome / Already installed -->
-    <div class="screen active" id="screen0">
-        <div class="screen-title" id="welcomeTitle">Welcome</div>
-        <div class="screen-desc" id="welcomeDesc">This installer will set up Claude Remote Autostart on your machine.</div>
+    <!-- SCREEN 0: Requirements -->
+    <div class="screen screen-active" id="screen0">
+        <div class="screen-title" id="welcomeTitle">Requirements</div>
+        <div class="screen-desc" id="welcomeDesc">Checking your system before installation.</div>
 
-        <div class="check-item" id="itemClaude">
-            <span class="icon">⚡</span>
-            <span class="label">Claude Code</span>
-            <span class="status checking" id="claudeStatus">Checking...</span>
+        <div class="check-row" id="rowClaude">
+            <span class="check-label">Claude Code installed</span>
+            <span class="check-status status-wait" id="stClaude">Checking...</span>
+            <div style="clear:both"></div>
         </div>
-        <div class="check-item" id="itemLogin">
-            <span class="icon">🔑</span>
-            <span class="label">Logged in</span>
-            <span class="status checking" id="loginStatus">Checking...</span>
+        <div class="check-row" id="rowLogin">
+            <span class="check-label">Logged in to Claude</span>
+            <span class="check-status status-wait" id="stLogin">Checking...</span>
+            <div style="clear:both"></div>
         </div>
-        <div class="check-item" id="itemTrust">
-            <span class="icon">🛡️</span>
-            <span class="label">Workspace trusted</span>
-            <span class="status checking" id="trustStatus">Checking...</span>
+        <div class="check-row" id="rowTrust">
+            <span class="check-label">Workspace trusted</span>
+            <span class="check-status status-wait" id="stTrust">Checking...</span>
+            <div style="clear:both"></div>
         </div>
 
         <div class="alert" id="alertWelcome"></div>
@@ -293,8 +268,11 @@
 
     <!-- SCREEN 1: Slack -->
     <div class="screen" id="screen1">
-        <div class="screen-title">Slack Notifications <span class="optional-badge">optional</span></div>
-        <div class="screen-desc">Receive the session URL on Slack every time the service starts. You can skip this step and configure it later.</div>
+        <div class="screen-title">Slack Notifications <span class="badge">optional</span></div>
+        <div class="screen-desc">
+            Receive the remote session URL on Slack whenever the service starts.<br>
+            Already installed &mdash; this step is optional and can be skipped.
+        </div>
 
         <label class="field-label">Incoming Webhook URL</label>
         <div class="field-hint">
@@ -302,28 +280,28 @@
             <a onclick="openSlack()">api.slack.com/apps</a>
         </div>
         <input type="text" id="webhookInput" placeholder="https://hooks.slack.com/services/..." />
-        <span class="skip-link" onclick="skipSlack()">Skip this step →</span>
+        <span class="skip-link" onclick="skipSlack()">Skip, configure later</span>
     </div>
 
     <!-- SCREEN 2: Installing -->
     <div class="screen" id="screen2">
         <div class="screen-title">Installing...</div>
-        <div class="screen-desc">Copying files and configuring your system.</div>
+        <div class="screen-desc">Copying files and configuring Windows Startup.</div>
 
-        <div class="check-item" id="itemFiles">
-            <span class="icon">📁</span>
-            <span class="label">Copying files</span>
-            <span class="status checking" id="filesStatus">Waiting...</span>
+        <div class="check-row">
+            <span class="check-label">Copying files</span>
+            <span class="check-status" id="stFiles">Waiting...</span>
+            <div style="clear:both"></div>
         </div>
-        <div class="check-item" id="itemStartup">
-            <span class="icon">🚀</span>
-            <span class="label">Adding to Windows Startup</span>
-            <span class="status checking" id="startupStatus">Waiting...</span>
+        <div class="check-row">
+            <span class="check-label">Windows Startup shortcut</span>
+            <span class="check-status" id="stStartup">Waiting...</span>
+            <div style="clear:both"></div>
         </div>
-        <div class="check-item" id="itemSlackConf">
-            <span class="icon">💬</span>
-            <span class="label">Configuring Slack</span>
-            <span class="status checking" id="slackStatus">Waiting...</span>
+        <div class="check-row">
+            <span class="check-label">Slack webhook</span>
+            <span class="check-status" id="stSlack">Waiting...</span>
+            <div style="clear:both"></div>
         </div>
 
         <div class="alert" id="alertInstall"></div>
@@ -331,27 +309,31 @@
 
     <!-- SCREEN 3: Done -->
     <div class="screen" id="screen3">
-        <div class="success-icon">✅</div>
-        <div class="success-title">Installation complete!</div>
-        <div class="success-desc">
-            Claude Remote Autostart will launch automatically<br>
-            every time Windows starts.
+        <div class="success-block">
+            <div class="success-icon">OK</div>
+            <div class="success-title">Installation complete!</div>
+            <div class="success-desc">
+                Claude Remote Autostart will launch automatically<br>
+                every time Windows starts.
+            </div>
         </div>
         <div class="info-row">
-            <span class="key">Installed at</span>
-            <span class="val" id="installPathLabel"></span>
+            <span class="info-key">Installed at</span>
+            <span class="info-val" id="installPathLabel"></span>
+            <div style="clear:both"></div>
         </div>
         <div class="info-row" id="slackRow" style="display:none">
-            <span class="key">Slack webhook</span>
-            <span class="val">Configured ✓</span>
+            <span class="info-key">Slack webhook</span>
+            <span class="info-val">Configured</span>
+            <div style="clear:both"></div>
         </div>
     </div>
 
 </div>
 
-<div class="footer">
-    <button class="btn btn-secondary" id="btnBack" onclick="goBack()" style="visibility:hidden">Back</button>
-    <button class="btn btn-primary" id="btnNext" onclick="goNext()">Check requirements →</button>
+<div id="footer">
+    <button class="btn btn-secondary" id="btnBack" onclick="goBack()" style="display:none">Back</button>
+    <button class="btn btn-primary" id="btnNext" onclick="goNext()">Check &rarr;</button>
 </div>
 
 <script language="VBScript">
@@ -360,9 +342,9 @@ Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 
 Dim userHome, installDir, scriptDir, startupPath
-userHome   = WshShell.ExpandEnvironmentStrings("%USERPROFILE%")
-installDir = userHome & "\claude-remote"
-scriptDir  = fso.GetParentFolderName(window.location.pathname)
+userHome    = WshShell.ExpandEnvironmentStrings("%USERPROFILE%")
+installDir  = userHome & "\claude-remote"
+scriptDir   = fso.GetParentFolderName(window.location.pathname)
 startupPath = WshShell.SpecialFolders("Startup")
 
 Dim claudePath
@@ -381,86 +363,74 @@ Dim checksOk
 checksOk = False
 
 Sub Window_OnLoad()
-    ' Resize window
-    window.resizeTo 520, 580
-    window.moveTo (screen.width - 520) / 2, (screen.height - 580) / 2
+    window.resizeTo 480, 500
+    window.moveTo (screen.width - 480) \ 2, (screen.height - 500) \ 2
 
-    ' Update welcome text if already installed
     If alreadyInstalled Then
         document.getElementById("welcomeTitle").innerText = "Update Installation"
-        document.getElementById("welcomeDesc").innerText = "Claude Remote is already installed. Running this installer will update your files."
+        document.getElementById("welcomeDesc").innerText = "Claude Remote is already installed. This will update your files."
     End If
 
-    ' Run checks after short delay
-    window.setTimeout "RunChecks()", 400
+    window.setTimeout "RunChecks()", 500
 End Sub
 
 Sub RunChecks()
     Dim allOk
     allOk = True
 
-    ' Check Claude installed
+    ' Claude installed?
     If fso.FileExists(claudePath) Then
-        SetCheck "itemClaude", "claudeStatus", "ok", "Found"
+        SetStatus "stClaude", "Found", "ok"
     Else
-        SetCheck "itemClaude", "claudeStatus", "fail", "Not found"
-        SetAlert "alertWelcome", "error", "Claude Code not found. Install it at claude.ai/code and re-run the installer."
+        SetStatus "stClaude", "Not found", "fail"
+        ShowAlert "alertWelcome", "error", "Claude Code not found at: " & claudePath & vbCrLf & "Install it from claude.ai/code and re-run this installer."
         document.getElementById("btnNext").disabled = True
-        allOk = False
+        Exit Sub
     End If
 
-    If Not allOk Then Exit Sub
-
-    ' Check logged in
+    ' Logged in?
     Dim oExec, output
     Set oExec = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""& '" & claudePath & "' --version 2>&1""")
     output = LCase(oExec.StdOut.ReadAll() & oExec.StdErr.ReadAll())
 
     If InStr(output, "not logged") > 0 Or InStr(output, "login") > 0 Then
-        SetCheck "itemLogin", "loginStatus", "fail", "Not logged in"
-        SetAlert "alertWelcome", "error", "Claude Code is not logged in. Open a terminal and run: claude login"
+        SetStatus "stLogin", "Not logged in", "fail"
+        ShowAlert "alertWelcome", "error", "Claude Code is not logged in." & vbCrLf & "Open a terminal and run: claude login"
         document.getElementById("btnNext").disabled = True
-        allOk = False
+        Exit Sub
     Else
-        SetCheck "itemLogin", "loginStatus", "ok", "OK"
+        SetStatus "stLogin", "OK", "ok"
     End If
 
-    If Not allOk Then Exit Sub
-
-    ' Check workspace trust
-    Dim oTrust
+    ' Workspace trusted?
+    Dim oTrust, trustOut
     Set oTrust = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""cd '" & userHome & "'; & '" & claudePath & "' remote-control --help 2>&1 | Select-String 'Workspace not trusted'""")
-    Dim trustOut
     trustOut = oTrust.StdOut.ReadAll()
 
     If InStr(trustOut, "Workspace not trusted") > 0 Then
-        SetCheck "itemTrust", "trustStatus", "fail", "Not trusted"
-        SetAlert "alertWelcome", "warning", "Workspace not trusted. Open a terminal, run 'claude' in your home folder and accept the trust dialog."
+        SetStatus "stTrust", "Not trusted", "fail"
+        ShowAlert "alertWelcome", "warning", "Workspace not trusted." & vbCrLf & "Open a terminal, go to your home folder, run 'claude' and accept the trust dialog."
         document.getElementById("btnNext").disabled = True
-        allOk = False
+        Exit Sub
     Else
-        SetCheck "itemTrust", "trustStatus", "ok", "Trusted"
+        SetStatus "stTrust", "Trusted", "ok"
     End If
 
-    If allOk Then
-        checksOk = True
-        document.getElementById("btnNext").disabled = False
-        ' Load existing webhook if reinstalling
-        If alreadyInstalled Then LoadExistingWebhook()
-    End If
+    checksOk = True
+    document.getElementById("btnNext").disabled = False
+
+    If alreadyInstalled Then LoadExistingWebhook()
 End Sub
 
 Sub LoadExistingWebhook()
     On Error Resume Next
-    Dim tsEx
-    Set tsEx = fso.OpenTextFile(installDir & "\claude-remote.vbs", 1)
-    Dim content, lines, i
-    content = tsEx.ReadAll()
-    tsEx.Close
+    Dim ts, content, lines, i, val
+    Set ts = fso.OpenTextFile(installDir & "\claude-remote.vbs", 1)
+    content = ts.ReadAll()
+    ts.Close
     lines = Split(content, vbLf)
     For i = 0 To UBound(lines)
         If InStr(lines(i), "slackWebhook =") > 0 And InStr(lines(i), "YOUR_SLACK_WEBHOOK_URL") = 0 Then
-            Dim val
             val = Trim(lines(i))
             val = Mid(val, InStr(val, Chr(34)) + 1)
             val = Left(val, Len(val) - 1)
@@ -498,64 +468,72 @@ Sub ShowScreen(n)
     Dim i
     For i = 0 To 3
         document.getElementById("screen" & i).className = "screen"
-        document.getElementById("dot" & i).className = "step-dot"
+        document.getElementById("dot" & i).className = "dot"
     Next
-    document.getElementById("screen" & n).className = "screen active"
+    document.getElementById("screen" & n).className = "screen screen-active"
 
-    ' Update dots
     For i = 0 To n - 1
-        document.getElementById("dot" & i).className = "step-dot done"
+        document.getElementById("dot" & i).className = "dot dot-done"
     Next
-    document.getElementById("dot" & n).className = "step-dot active"
+    document.getElementById("dot" & n).className = "dot dot-active"
 
     currentScreen = n
 
-    ' Update buttons
-    If n = 0 Then
-        document.getElementById("btnBack").style.visibility = "hidden"
-        document.getElementById("btnNext").innerText = "Check requirements" & Chr(160) & Chr(8594)
-        document.getElementById("btnNext").className = "btn btn-primary"
-        document.getElementById("btnNext").disabled = Not checksOk
-    ElseIf n = 1 Then
-        document.getElementById("btnBack").style.visibility = "visible"
-        document.getElementById("btnNext").innerText = "Install" & Chr(160) & Chr(8594)
-        document.getElementById("btnNext").className = "btn btn-primary"
-        document.getElementById("btnNext").disabled = False
-    ElseIf n = 2 Then
-        document.getElementById("btnBack").style.visibility = "hidden"
-        document.getElementById("btnNext").disabled = True
-        document.getElementById("btnNext").innerText = "Installing..."
-    ElseIf n = 3 Then
-        document.getElementById("btnBack").style.visibility = "hidden"
-        document.getElementById("btnNext").innerText = "Close"
-        document.getElementById("btnNext").className = "btn btn-blue"
-        document.getElementById("btnNext").disabled = False
-    End If
+    Select Case n
+        Case 0
+            document.getElementById("btnBack").style.display = "none"
+            document.getElementById("btnNext").innerText = "Check" & Chr(160) & Chr(8594)
+            document.getElementById("btnNext").className = "btn btn-primary"
+            document.getElementById("btnNext").disabled = Not checksOk
+        Case 1
+            document.getElementById("btnBack").style.display = "inline"
+            document.getElementById("btnNext").innerText = "Install" & Chr(160) & Chr(8594)
+            document.getElementById("btnNext").className = "btn btn-primary"
+            document.getElementById("btnNext").disabled = False
+        Case 2
+            document.getElementById("btnBack").style.display = "none"
+            document.getElementById("btnNext").disabled = True
+            document.getElementById("btnNext").innerText = "Installing..."
+        Case 3
+            document.getElementById("btnBack").style.display = "none"
+            document.getElementById("btnNext").innerText = "Close"
+            document.getElementById("btnNext").className = "btn btn-blue"
+            document.getElementById("btnNext").disabled = False
+    End Select
 End Sub
 
 Sub RunInstall()
-    ' Copy files
     Dim vbsSrc, ps1Src, traySrc
     vbsSrc  = scriptDir & "\claude-remote.vbs"
     ps1Src  = scriptDir & "\claude-remote-start.ps1"
     traySrc = scriptDir & "\claude-remote-tray.ps1"
 
+    ' Check source files exist
+    If Not fso.FileExists(vbsSrc) Or Not fso.FileExists(ps1Src) Or Not fso.FileExists(traySrc) Then
+        SetStatus "stFiles", "Source files missing", "fail"
+        ShowAlert "alertInstall", "error", "Source files not found. Make sure all files are in the same folder as install.hta"
+        document.getElementById("btnNext").disabled = False
+        Exit Sub
+    End If
+
+    ' Create install folder
     On Error Resume Next
     If Not fso.FolderExists(installDir) Then fso.CreateFolder installDir
 
-    fso.CopyFile vbsSrc,  installDir & "\claude-remote.vbs",        True
-    fso.CopyFile ps1Src,  installDir & "\claude-remote-start.ps1",  True
-    fso.CopyFile traySrc, installDir & "\claude-remote-tray.ps1",   True
+    ' Copy files
+    fso.CopyFile vbsSrc,  installDir & "\claude-remote.vbs",       True
+    fso.CopyFile ps1Src,  installDir & "\claude-remote-start.ps1", True
+    fso.CopyFile traySrc, installDir & "\claude-remote-tray.ps1",  True
 
     If Err.Number <> 0 Then
-        SetCheck "itemFiles", "filesStatus", "fail", "Error"
-        SetAlert "alertInstall", "error", "Failed to copy files: " & Err.Description
+        SetStatus "stFiles", "Error", "fail"
+        ShowAlert "alertInstall", "error", "Failed to copy files: " & Err.Description
         document.getElementById("btnNext").disabled = False
         Exit Sub
     End If
     On Error GoTo 0
 
-    SetCheck "itemFiles", "filesStatus", "ok", "Done"
+    SetStatus "stFiles", "Done", "ok"
 
     ' Patch paths in vbs
     Dim tsVbs, vbsContent
@@ -586,39 +564,38 @@ Sub RunInstall()
     oShortcut.TargetPath = installDir & "\claude-remote.vbs"
     oShortcut.WorkingDirectory = installDir
     oShortcut.Save
-    SetCheck "itemStartup", "startupStatus", "ok", "Done"
+    SetStatus "stStartup", "Done", "ok"
 
     ' Slack
-    If slackWebhook <> "" And InStr(slackWebhook, "hooks.slack.com") > 0 Then
-        SetCheck "itemSlackConf", "slackStatus", "ok", "Configured"
-        document.getElementById("slackRow").style.display = "flex"
+    If InStr(slackWebhook, "hooks.slack.com") > 0 Then
+        SetStatus "stSlack", "Configured", "ok"
+        document.getElementById("slackRow").style.display = "block"
     Else
-        SetCheck "itemSlackConf", "slackStatus", "ok", "Skipped"
+        SetStatus "stSlack", "Skipped", "ok"
     End If
 
-    ' Done
     document.getElementById("installPathLabel").innerText = installDir
     ShowScreen 3
 End Sub
 
-Sub SetCheck(itemId, statusId, state, txt)
-    document.getElementById(statusId).innerText = txt
+Sub SetStatus(elemId, txt, state)
+    Dim el
+    Set el = document.getElementById(elemId)
+    el.innerText = txt
     If state = "ok" Then
-        document.getElementById(itemId).className = "check-item ok"
-        document.getElementById(statusId).className = "status"
-        document.getElementById(statusId).style.color = "#3fb950"
+        el.className = "check-status status-ok"
     ElseIf state = "fail" Then
-        document.getElementById(itemId).className = "check-item fail"
-        document.getElementById(statusId).className = "status"
-        document.getElementById(statusId).style.color = "#f85149"
-    ElseIf state = "checking" Then
-        document.getElementById(statusId).style.color = "#d29922"
+        el.className = "check-status status-fail"
+    ElseIf state = "wait" Then
+        el.className = "check-status status-wait"
     End If
 End Sub
 
-Sub SetAlert(id, alertType, msg)
-    document.getElementById(id).className = "alert " & alertType
-    document.getElementById(id).innerText = msg
+Sub ShowAlert(elemId, alertType, msg)
+    Dim el
+    Set el = document.getElementById(elemId)
+    el.className = "alert alert-" & alertType
+    el.innerText = msg
 End Sub
 
 Sub openSlack()
