@@ -98,29 +98,15 @@ If alreadyInstalled Then
     On Error GoTo 0
 End If
 
-' Abre pagina para criar webhook antes de pedir a URL
-Dim openSlack
-openSlack = MsgBox("Para receber notificacoes no Slack, voce precisa de um Incoming Webhook." & vbCrLf & vbCrLf & _
-    "Clique em OK para abrir a pagina de criacao do app no Slack." & vbCrLf & _
-    "Clique em Cancelar para pular esta etapa.", _
-    vbOKCancel + vbInformation, "Configurar Slack Webhook")
-
-If openSlack = vbOK Then
-    WshShell.Run "https://api.slack.com/apps"
-    WScript.Sleep 1500
-End If
-
 Dim webhook
-webhook = InputBox("Cole aqui o seu Slack Incoming Webhook URL:" & vbCrLf & vbCrLf & _
-    "Exemplo: https://hooks.slack.com/services/XXX/YYY/ZZZ" & vbCrLf & vbCrLf & _
-    "(Deixe em branco para pular)", _
-    "Slack Webhook", existingWebhook)
-
-If webhook = "" Then
-    Dim skipSlack
-    skipSlack = MsgBox("Nenhum webhook informado. Continuar sem Slack?", vbYesNo + vbQuestion, "Slack")
-    If skipSlack = vbNo Then WScript.Quit
-End If
+webhook = InputBox("INSTALACAO CONCLUIDA!" & vbCrLf & _
+    "Claude Remote foi instalado e sera iniciado automaticamente com o Windows." & vbCrLf & vbCrLf & _
+    "─────────────────────────────────────────" & vbCrLf & _
+    "SLACK (OPCIONAL)" & vbCrLf & _
+    "Para receber a URL da sessao no Slack, cole abaixo o seu Incoming Webhook URL." & vbCrLf & _
+    "Nao tem um? Crie em: https://api.slack.com/apps" & vbCrLf & vbCrLf & _
+    "Deixe em branco para pular esta etapa.", _
+    "Configurar Slack (opcional)", existingWebhook)
 
 ' --- Cria pasta de instalacao ---
 If Not fso.FolderExists(installDir) Then fso.CreateFolder installDir
@@ -183,12 +169,10 @@ oShortcut.WorkingDirectory = installDir
 oShortcut.Save
 
 ' --- Concluido ---
-MsgBox "Instalacao concluida com sucesso!" & vbCrLf & vbCrLf & _
-    "Arquivos instalados em:" & vbCrLf & _
-    "  " & installDir & vbCrLf & vbCrLf & _
-    "Atalho adicionado ao startup do Windows." & vbCrLf & vbCrLf & _
-    "O Claude Remote sera iniciado automaticamente na proxima vez que o Windows ligar.", _
-    vbInformation, "Instalacao concluida"
+MsgBox "Tudo pronto!" & vbCrLf & vbCrLf & _
+    "O Claude Remote sera iniciado automaticamente na proxima vez que o Windows ligar." & vbCrLf & vbCrLf & _
+    "Arquivos em: " & installDir, _
+    vbInformation, "Claude Remote Autostart"
 
 Set fso = Nothing
 Set WshShell = Nothing
