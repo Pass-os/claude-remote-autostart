@@ -4,7 +4,7 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 
 Dim scriptDir, ps1Path
 scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
-ps1Path   = scriptDir & "\src\install.ps1"
+ps1Path   = scriptDir & "\src\uninstall.ps1"
 
 If Not fso.FileExists(ps1Path) Then
     MsgBox "Arquivo nao encontrado: " & ps1Path, vbCritical, "Erro"
