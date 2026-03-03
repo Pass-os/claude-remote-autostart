@@ -4,13 +4,10 @@ Add-Type -AssemblyName System.Drawing
 $userHome   = $env:USERPROFILE
 $installDir = "$userHome\claude-remote"
 $claudePath = "$userHome\.local\bin\claude.exe"
-$startupLnk = [System.IO.Path]::Combine(
-    [Environment]::GetFolderPath('Startup'), 'claude-remote.lnk')
+$startupLnk = [System.IO.Path]::Combine([Environment]::GetFolderPath('Startup'), 'claude-remote.lnk')
 $scriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
-
 $alreadyInstalled = Test-Path "$installDir\claude-remote.vbs"
 
-# ── Colors & fonts ──────────────────────────────────────────────────────────
 $bg      = [System.Drawing.Color]::FromArgb(13,  17,  23)
 $bgPanel = [System.Drawing.Color]::FromArgb(22,  27,  34)
 $border  = [System.Drawing.Color]::FromArgb(48,  54,  61)
@@ -27,7 +24,6 @@ $fontTitle = New-Object System.Drawing.Font('Segoe UI', 14, [System.Drawing.Font
 $fontSmall = New-Object System.Drawing.Font('Segoe UI', 8)
 $fontMono  = New-Object System.Drawing.Font('Consolas', 9)
 
-# ── Helper: styled label ─────────────────────────────────────────────────────
 function New-Label($text, $x, $y, $w, $h, $font=$fontMain, $color=$fg) {
     $l = New-Object System.Windows.Forms.Label
     $l.Text      = $text
@@ -39,27 +35,21 @@ function New-Label($text, $x, $y, $w, $h, $font=$fontMain, $color=$fg) {
     return $l
 }
 
-# ── Helper: check row ────────────────────────────────────────────────────────
 function New-CheckRow($parent, $label, $y) {
     $panel = New-Object System.Windows.Forms.Panel
     $panel.Location  = New-Object System.Drawing.Point(0, $y)
     $panel.Size      = New-Object System.Drawing.Size(440, 38)
     $panel.BackColor = $bgPanel
-
     $lbl = New-Label $label 14 10 280 20 $fontMain $fg
     $panel.Controls.Add($lbl)
-
     $status = New-Label '...' 310 10 116 20 $fontMain $fgMuted
     $status.TextAlign = [System.Drawing.ContentAlignment]::MiddleRight
     $panel.Controls.Add($status)
-
     $parent.Controls.Add($panel)
     return $status
 }
 
-# ════════════════════════════════════════════════════════════════════════════
-# FORM
-# ════════════════════════════════════════════════════════════════════════════
+# Form
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = 'Claude Remote Autostart'
 $form.Size            = New-Object System.Drawing.Size(460, 520)
@@ -70,26 +60,21 @@ $form.Font            = $fontMain
 $form.FormBorderStyle = 'FixedSingle'
 $form.MaximizeBox     = $false
 
-# ── Header ───────────────────────────────────────────────────────────────────
+# Header
 $header = New-Object System.Windows.Forms.Panel
 $header.Dock      = 'Top'
 $header.Height    = 70
 $header.BackColor = $bgPanel
 $form.Controls.Add($header)
+$header.Controls.Add((New-Label 'Claude Remote Autostart' 20 14 320 28 $fontTitle $fg))
+$header.Controls.Add((New-Label 'Installer  v1.0.0' 20 44 200 18 $fontSmall $fgMuted))
 
-$lblTitle = New-Label 'Claude Remote Autostart' 20 14 320 28 $fontTitle $fg
-$header.Controls.Add($lblTitle)
-
-$lblSub = New-Label 'Installer  ·  v1.0.0' 20 44 200 18 $fontSmall $fgMuted
-$header.Controls.Add($lblSub)
-
-# ── Step dots ────────────────────────────────────────────────────────────────
+# Dots
 $dotsPanel = New-Object System.Windows.Forms.Panel
 $dotsPanel.Location  = New-Object System.Drawing.Point(0, 70)
 $dotsPanel.Size      = New-Object System.Drawing.Size(440, 20)
 $dotsPanel.BackColor = $bg
 $form.Controls.Add($dotsPanel)
-
 $dots = @()
 for ($i = 0; $i -lt 4; $i++) {
     $d = New-Object System.Windows.Forms.Panel
@@ -99,31 +84,28 @@ for ($i = 0; $i -lt 4; $i++) {
     $dotsPanel.Controls.Add($d)
     $dots += $d
 }
-
 function Set-Dots($active) {
     for ($i = 0; $i -lt 4; $i++) {
-        if ($i -lt $active)   { $dots[$i].BackColor = $green }
-        elseif ($i -eq $active) { $dots[$i].BackColor = $blue }
-        else                  { $dots[$i].BackColor = $border }
+        if ($i -lt $active)    { $dots[$i].BackColor = $green }
+        elseif ($i -eq $active){ $dots[$i].BackColor = $blue  }
+        else                   { $dots[$i].BackColor = $border }
     }
 }
 Set-Dots 0
 
-# ── Content panels ───────────────────────────────────────────────────────────
+# Content area
 $contentY = 90
-$contentH = 340
-
 function New-Screen {
     $p = New-Object System.Windows.Forms.Panel
     $p.Location  = New-Object System.Drawing.Point(0, $contentY)
-    $p.Size      = New-Object System.Drawing.Size(444, $contentH)
+    $p.Size      = New-Object System.Drawing.Size(444, 340)
     $p.BackColor = $bg
     $p.Visible   = $false
     $form.Controls.Add($p)
     return $p
 }
 
-# ── Footer ───────────────────────────────────────────────────────────────────
+# Footer
 $footer = New-Object System.Windows.Forms.Panel
 $footer.Location  = New-Object System.Drawing.Point(0, 430)
 $footer.Size      = New-Object System.Drawing.Size(444, 50)
@@ -138,36 +120,33 @@ function New-Btn($text, $x, $primary=$true) {
     $b.FlatStyle = 'Flat'
     $b.Font      = $fontBold
     $b.ForeColor = $fg
-    $b.BackColor = if ($primary) { [System.Drawing.Color]::FromArgb(35, 134, 54) } `
-                   else          { [System.Drawing.Color]::FromArgb(33,  38,  45) }
-    $b.FlatAppearance.BorderColor = if ($primary) { $green } else { $border }
-    $b.FlatAppearance.BorderSize  = 1
-    $b.Cursor    = [System.Windows.Forms.Cursors]::Hand
+    if ($primary) {
+        $b.BackColor = [System.Drawing.Color]::FromArgb(35,134,54)
+        $b.FlatAppearance.BorderColor = $green
+    } else {
+        $b.BackColor = [System.Drawing.Color]::FromArgb(33,38,45)
+        $b.FlatAppearance.BorderColor = $border
+    }
+    $b.FlatAppearance.BorderSize = 1
+    $b.Cursor = [System.Windows.Forms.Cursors]::Hand
     $footer.Controls.Add($b)
     return $b
 }
 
 $btnBack = New-Btn 'Back'    20  $false
-$btnNext = New-Btn 'Next →' 314 $true
+$btnNext = New-Btn 'Next >>' 314 $true
 $btnBack.Visible = $false
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCREEN 0 — Requirements
-# ════════════════════════════════════════════════════════════════════════════
+# Screen 0 - Requirements
 $s0 = New-Screen
 $s0.Visible = $true
-
-$s0Title = New-Label (if ($alreadyInstalled) {'Update Installation'} else {'Requirements'}) `
-    20 10 400 26 $fontBold $fg
+$s0Title = New-Label '' 20 10 400 26 $fontBold $fg
+$s0Title.Text = if ($alreadyInstalled) { 'Update Installation' } else { 'Requirements' }
 $s0.Controls.Add($s0Title)
-
-$s0Desc = New-Label 'Checking your system before installation.' `
-    20 38 400 18 $fontMain $fgMuted
-$s0.Controls.Add($s0Desc)
-
-$stClaude  = New-CheckRow $s0 'Claude Code installed'   70
-$stLogin   = New-CheckRow $s0 'Logged in to Claude'    116
-$stTrust   = New-CheckRow $s0 'Workspace trusted'      162
+$s0.Controls.Add((New-Label 'Checking your system before installation.' 20 38 400 18 $fontMain $fgMuted))
+$stClaude = New-CheckRow $s0 'Claude Code installed'  70
+$stLogin  = New-CheckRow $s0 'Logged in to Claude'   116
+$stTrust  = New-CheckRow $s0 'Workspace trusted'     162
 
 $alertBox = New-Object System.Windows.Forms.Panel
 $alertBox.Location  = New-Object System.Drawing.Point(0, 215)
@@ -175,15 +154,14 @@ $alertBox.Size      = New-Object System.Drawing.Size(440, 60)
 $alertBox.BackColor = $bg
 $alertBox.Visible   = $false
 $s0.Controls.Add($alertBox)
-
-$alertLbl = New-Label '' 14 8 412 50 $fontSmall $red
+$alertLbl = New-Label '' 14 8 412 48 $fontSmall $red
 $alertLbl.AutoSize = $false
 $alertBox.Controls.Add($alertLbl)
 
 function Show-Alert($msg, $color=$red) {
     $alertLbl.Text      = $msg
     $alertLbl.ForeColor = $color
-    $alertBox.BackColor = [System.Drawing.Color]::FromArgb(45, 27, 27)
+    $alertBox.BackColor = [System.Drawing.Color]::FromArgb(45,27,27)
     $alertBox.Visible   = $true
 }
 
@@ -192,35 +170,27 @@ function Set-CheckStatus($lbl, $text, $color) {
     $lbl.ForeColor = $color
 }
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCREEN 1 — Slack
-# ════════════════════════════════════════════════════════════════════════════
+# Screen 1 - Slack
 $s1 = New-Screen
-
-$s1.Controls.Add((New-Label 'Slack Notifications' 20 10 250 26 $fontBold $fg))
-$s1.Controls.Add((New-Label 'optional' 272 16 70 16 $fontSmall $fgMuted))
-$s1.Controls.Add((New-Label "Receive the session URL on Slack when the service starts.`nAlready installed — Slack is optional, you can skip this step." `
-    20 40 400 36 $fontMain $fgMuted))
-
+$s1.Controls.Add((New-Label 'Slack Notifications  (optional)' 20 10 380 26 $fontBold $fg))
+$s1.Controls.Add((New-Label "Receive the session URL on Slack when the service starts.`nSlack is optional - you can skip this step." 20 40 400 36 $fontMain $fgMuted))
 $s1.Controls.Add((New-Label 'Incoming Webhook URL' 20 90 200 20 $fontBold $fg))
 
-$hintLbl = New-Label "Don't have one? Create your app at api.slack.com/apps" `
-    20 112 400 18 $fontSmall $fgMuted
+$hintLbl = New-Label "Don't have one? Create your app at api.slack.com/apps" 20 112 400 18 $fontSmall $blue
 $hintLbl.Cursor = [System.Windows.Forms.Cursors]::Hand
 $hintLbl.add_Click({ Start-Process 'https://api.slack.com/apps' })
 $s1.Controls.Add($hintLbl)
 
 $webhookBox = New-Object System.Windows.Forms.TextBox
-$webhookBox.Location  = New-Object System.Drawing.Point(20, 134)
-$webhookBox.Size      = New-Object System.Drawing.Size(400, 26)
-$webhookBox.BackColor = $bgPanel
-$webhookBox.ForeColor = $fg
+$webhookBox.Location    = New-Object System.Drawing.Point(20, 134)
+$webhookBox.Size        = New-Object System.Drawing.Size(400, 26)
+$webhookBox.BackColor   = $bgPanel
+$webhookBox.ForeColor   = $fg
 $webhookBox.BorderStyle = 'FixedSingle'
-$webhookBox.Font      = $fontMono
-$webhookBox.PlaceholderText = 'https://hooks.slack.com/services/...'
+$webhookBox.Font        = $fontMono
 $s1.Controls.Add($webhookBox)
 
-$skipLbl = New-Label 'Skip, configure later →' 20 170 200 18 $fontSmall $fgMuted
+$skipLbl = New-Label 'Skip, configure later' 20 170 200 18 $fontSmall $fgMuted
 $skipLbl.Cursor = [System.Windows.Forms.Cursors]::Hand
 $skipLbl.add_Click({
     $script:slackWebhook = ''
@@ -230,18 +200,13 @@ $skipLbl.add_Click({
 })
 $s1.Controls.Add($skipLbl)
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCREEN 2 — Installing
-# ════════════════════════════════════════════════════════════════════════════
+# Screen 2 - Installing
 $s2 = New-Screen
-
 $s2.Controls.Add((New-Label 'Installing...' 20 10 300 26 $fontBold $fg))
-$s2.Controls.Add((New-Label 'Copying files and configuring Windows Startup.' `
-    20 38 400 18 $fontMain $fgMuted))
-
-$stFiles   = New-CheckRow $s2 'Copying files'              70
-$stStartup = New-CheckRow $s2 'Windows Startup shortcut'  116
-$stSlack   = New-CheckRow $s2 'Slack webhook'             162
+$s2.Controls.Add((New-Label 'Copying files and configuring Windows Startup.' 20 38 400 18 $fontMain $fgMuted))
+$stFiles   = New-CheckRow $s2 'Copying files'             70
+$stStartup = New-CheckRow $s2 'Windows Startup shortcut' 116
+$stSlack   = New-CheckRow $s2 'Slack webhook'            162
 
 $alertInstall = New-Object System.Windows.Forms.Panel
 $alertInstall.Location  = New-Object System.Drawing.Point(0, 215)
@@ -249,26 +214,20 @@ $alertInstall.Size      = New-Object System.Drawing.Size(440, 60)
 $alertInstall.BackColor = $bg
 $alertInstall.Visible   = $false
 $s2.Controls.Add($alertInstall)
-
-$alertInstallLbl = New-Label '' 14 8 412 50 $fontSmall $red
+$alertInstallLbl = New-Label '' 14 8 412 48 $fontSmall $red
 $alertInstallLbl.AutoSize = $false
 $alertInstall.Controls.Add($alertInstallLbl)
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCREEN 3 — Done
-# ════════════════════════════════════════════════════════════════════════════
+# Screen 3 - Done
 $s3 = New-Screen
-
 $s3.Controls.Add((New-Label 'Installation complete!' 20 30 400 30 $fontTitle $green))
-$s3.Controls.Add((New-Label "Claude Remote Autostart will launch automatically`nevery time Windows starts." `
-    20 70 400 40 $fontMain $fgMuted))
+$s3.Controls.Add((New-Label "Claude Remote Autostart will launch automatically`nevery time Windows starts." 20 70 400 40 $fontMain $fgMuted))
 
 $infoPath = New-Object System.Windows.Forms.Panel
 $infoPath.Location  = New-Object System.Drawing.Point(0, 125)
 $infoPath.Size      = New-Object System.Drawing.Size(440, 36)
 $infoPath.BackColor = $bgPanel
 $s3.Controls.Add($infoPath)
-
 $infoPath.Controls.Add((New-Label 'Installed at' 14 8 100 20 $fontSmall $fgMuted))
 $installPathLbl = New-Label $installDir 120 8 300 20 $fontMono $fg
 $infoPath.Controls.Add($installPathLbl)
@@ -279,13 +238,10 @@ $infoSlack.Size      = New-Object System.Drawing.Size(440, 36)
 $infoSlack.BackColor = $bgPanel
 $infoSlack.Visible   = $false
 $s3.Controls.Add($infoSlack)
-
 $infoSlack.Controls.Add((New-Label 'Slack webhook' 14 8 120 20 $fontSmall $fgMuted))
-$infoSlack.Controls.Add((New-Label 'Configured' 120 8 200 20 $fontMain $green))
+$infoSlack.Controls.Add((New-Label 'Configured' 140 8 200 20 $fontMain $green))
 
-# ════════════════════════════════════════════════════════════════════════════
 # Navigation
-# ════════════════════════════════════════════════════════════════════════════
 $screens = @($s0, $s1, $s2, $s3)
 $script:currentScreen = 0
 $script:slackWebhook  = ''
@@ -296,35 +252,33 @@ function Show-Screen($n) {
     $screens[$n].Visible = $true
     $script:currentScreen = $n
     Set-Dots $n
-
     switch ($n) {
         0 {
-            $btnBack.Visible = $false
-            $btnNext.Text    = 'Check →'
+            $btnBack.Visible   = $false
+            $btnNext.Text      = 'Check >>'
             $btnNext.BackColor = [System.Drawing.Color]::FromArgb(35,134,54)
-            $btnNext.Enabled = $script:checksOk
+            $btnNext.Enabled   = $script:checksOk
         }
         1 {
-            $btnBack.Visible = $true
-            $btnNext.Text    = 'Install →'
-            $btnNext.Enabled = $true
+            $btnBack.Visible   = $true
+            $btnNext.Text      = 'Install >>'
+            $btnNext.Enabled   = $true
         }
         2 {
-            $btnBack.Visible = $false
-            $btnNext.Text    = 'Installing...'
-            $btnNext.Enabled = $false
+            $btnBack.Visible   = $false
+            $btnNext.Text      = 'Installing...'
+            $btnNext.Enabled   = $false
         }
         3 {
-            $btnBack.Visible = $false
-            $btnNext.Text    = 'Close'
+            $btnBack.Visible   = $false
+            $btnNext.Text      = 'Close'
             $btnNext.BackColor = [System.Drawing.Color]::FromArgb(31,111,235)
-            $btnNext.Enabled = $true
+            $btnNext.Enabled   = $true
         }
     }
 }
 
 $btnBack.add_Click({ if ($script:currentScreen -eq 1) { Show-Screen 0 } })
-
 $btnNext.add_Click({
     switch ($script:currentScreen) {
         0 { if ($script:checksOk) { Show-Screen 1 } }
@@ -338,54 +292,47 @@ $btnNext.add_Click({
     }
 })
 
-# ════════════════════════════════════════════════════════════════════════════
 # Checks
-# ════════════════════════════════════════════════════════════════════════════
 function Run-Checks {
-    # 1. Claude installed
     if (-not (Test-Path $claudePath)) {
         Set-CheckStatus $stClaude 'Not found' $red
         Set-CheckStatus $stLogin  'Skipped'   $fgMuted
         Set-CheckStatus $stTrust  'Skipped'   $fgMuted
-        Show-Alert "Claude Code not found.`nInstall it from claude.ai/code and re-run this installer."
+        Show-Alert "Claude Code not found.`nInstall it from claude.ai/code and re-run."
         return
     }
     Set-CheckStatus $stClaude 'Found' $green
 
-    # 2. Logged in (claude --version to temp file)
-    $tmp = "$env:TEMP\claude-check-$PID.tmp"
+    $tmp    = "$env:TEMP\claude-check-$PID.tmp"
+    $tmpErr = "$env:TEMP\claude-check-$PID.err"
     try {
-        $p = Start-Process -FilePath $claudePath -ArgumentList '--version' `
-            -RedirectStandardOutput $tmp -RedirectStandardError "$tmp.err" `
-            -WindowStyle Hidden -PassThru -Wait
+        Start-Process -FilePath $claudePath -ArgumentList '--version' `
+            -RedirectStandardOutput $tmp -RedirectStandardError $tmpErr `
+            -WindowStyle Hidden -Wait -ErrorAction Stop
         $out = if (Test-Path $tmp) { (Get-Content $tmp -Raw).ToLower() } else { '' }
-        Remove-Item $tmp, "$tmp.err" -ErrorAction SilentlyContinue
     } catch { $out = '' }
+    Remove-Item $tmp, $tmpErr -ErrorAction SilentlyContinue
 
     if ($out -match 'not logged|please login') {
         Set-CheckStatus $stLogin 'Not logged in' $red
         Set-CheckStatus $stTrust 'Skipped'       $fgMuted
-        Show-Alert "Claude Code is not logged in.`nOpen a terminal and run: claude login"
+        Show-Alert "Not logged in.`nOpen a terminal and run: claude login"
         return
     }
     Set-CheckStatus $stLogin 'OK' $green
 
-    # 3. Workspace trust (read .claude.json)
-    $trusted = $false
+    $trusted  = $false
     $clauJson = "$userHome\.claude.json"
     if (Test-Path $clauJson) {
         try {
-            $j = Get-Content $clauJson -Raw | ConvertFrom-Json
+            $j   = Get-Content $clauJson -Raw | ConvertFrom-Json
             $key = $userHome -replace '\\','/'
-            if ($j.projects.$key.hasTrustDialogAccepted -eq $true) {
-                $trusted = $true
-            }
+            if ($j.projects.$key.hasTrustDialogAccepted -eq $true) { $trusted = $true }
         } catch {}
     }
-
     if (-not $trusted) {
         Set-CheckStatus $stTrust 'Not trusted' $red
-        Show-Alert "Workspace not trusted.`nOpen a terminal, go to your home folder, run 'claude' and accept the trust dialog." $yellow
+        Show-Alert "Workspace not trusted.`nOpen a terminal, run 'claude' in your home folder and accept the trust dialog." $yellow
         return
     }
     Set-CheckStatus $stTrust 'Trusted' $green
@@ -393,34 +340,29 @@ function Run-Checks {
     $script:checksOk = $true
     $btnNext.Enabled = $true
 
-    # Pre-fill webhook if reinstalling
     if ($alreadyInstalled) {
         try {
-            $vbsContent = Get-Content "$installDir\claude-remote.vbs" -Raw
-            if ($vbsContent -match 'slackWebhook = "([^"]*hooks\.slack\.com[^"]*)"') {
+            $c = Get-Content "$installDir\claude-remote.vbs" -Raw
+            if ($c -match 'slackWebhook = "([^"]*hooks\.slack\.com[^"]*)"') {
                 $webhookBox.Text = $Matches[1]
             }
         } catch {}
     }
 }
 
-# ════════════════════════════════════════════════════════════════════════════
 # Install
-# ════════════════════════════════════════════════════════════════════════════
 function Run-Install {
     $vbsSrc  = "$scriptDir\claude-remote.vbs"
     $ps1Src  = "$scriptDir\claude-remote-start.ps1"
     $traySrc = "$scriptDir\claude-remote-tray.ps1"
 
-    # Check source files
     if (-not (Test-Path $vbsSrc) -or -not (Test-Path $ps1Src) -or -not (Test-Path $traySrc)) {
         $alertInstallLbl.Text = "Source files missing. Make sure all files are in the same folder as install.ps1"
         $alertInstall.Visible = $true
-        $btnNext.Enabled = $true
+        $btnNext.Enabled      = $true
         return
     }
 
-    # Copy files
     try {
         if (-not (Test-Path $installDir)) { New-Item -ItemType Directory -Path $installDir | Out-Null }
         Copy-Item $vbsSrc  "$installDir\claude-remote.vbs"       -Force
@@ -431,11 +373,10 @@ function Run-Install {
         Set-CheckStatus $stFiles 'Error' $red
         $alertInstallLbl.Text = "Failed to copy files: $_"
         $alertInstall.Visible = $true
-        $btnNext.Enabled = $true
+        $btnNext.Enabled      = $true
         return
     }
 
-    # Patch paths in vbs
     try {
         $c = Get-Content "$installDir\claude-remote.vbs" -Raw
         $c = $c -replace [regex]::Escape('C:\Users\softlive'), $userHome
@@ -445,14 +386,12 @@ function Run-Install {
         Set-Content "$installDir\claude-remote.vbs" $c -Encoding UTF8
     } catch {}
 
-    # Patch paths in ps1
     try {
         $c = Get-Content "$installDir\claude-remote-start.ps1" -Raw
         $c = $c -replace [regex]::Escape('C:\Users\softlive'), $userHome
         Set-Content "$installDir\claude-remote-start.ps1" $c -Encoding UTF8
     } catch {}
 
-    # Startup shortcut
     try {
         $wsh = New-Object -ComObject WScript.Shell
         $lnk = $wsh.CreateShortcut($startupLnk)
@@ -464,7 +403,6 @@ function Run-Install {
         Set-CheckStatus $stStartup 'Error' $red
     }
 
-    # Slack
     if ($script:slackWebhook -match 'hooks\.slack\.com') {
         Set-CheckStatus $stSlack 'Configured' $green
         $infoSlack.Visible = $true
@@ -476,9 +414,6 @@ function Run-Install {
     Show-Screen 3
 }
 
-# ════════════════════════════════════════════════════════════════════════════
-# Start
-# ════════════════════════════════════════════════════════════════════════════
 $form.Add_Shown({
     $btnNext.Enabled = $false
     Run-Checks
