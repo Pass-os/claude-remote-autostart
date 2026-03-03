@@ -1,0 +1,51 @@
+CLAUDE REMOTE AUTOSTART - TUTORIAL DE INSTALACAO
+==================================================
+
+PRE-REQUISITOS
+--------------
+1. Windows 10 ou 11
+2. Claude Code instalado e logado
+   - Baixe em: https://claude.ai/code
+   - Apos instalar, abra um terminal e execute: claude login
+3. (Opcional) Uma conta no Slack com um Incoming Webhook configurado
+   - Crie o seu em: https://api.slack.com/apps
+
+
+INSTALACAO
+----------
+1. Baixe o arquivo ZIP da pagina de releases
+2. Extraia todos os arquivos em uma pasta qualquer
+3. Dê duplo clique em: install.vbs
+4. Siga as instrucoes na tela
+
+
+O QUE O INSTALADOR FAZ
+-----------------------
+- Verifica se o Claude Code esta instalado e logado
+- Copia os arquivos para: C:\Users\<seu-usuario>\claude-remote\
+- Configura o Slack webhook (opcional)
+- Adiciona o servico ao startup do Windows
+
+
+COMO USAR
+---------
+Apos instalar, o Claude Remote sera iniciado automaticamente
+toda vez que o Windows ligar.
+
+- Quando ativo, aparece um icone verde na bandeja (barra de tarefas)
+- Clique duplo no icone para abrir a sessao no browser
+- Clique com o botao direito para ver opcoes (copiar URL, parar)
+- Se configurado, voce recebera a URL da sessao no Slack
+
+
+REINSTALAR / ATUALIZAR
+-----------------------
+Basta executar o install.vbs novamente.
+O instalador detecta que ja esta instalado e pergunta se deseja atualizar.
+O webhook ja configurado sera preservado.
+
+
+DESINSTALAR
+-----------
+1. Delete a pasta: C:\Users\<seu-usuario>\claude-remote\
+2. Delete o atalho em: C:\Users\<seu-usuario>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\claude-remote.lnk
