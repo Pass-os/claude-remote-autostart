@@ -171,9 +171,11 @@ Loop
 Log "URL: " & sessionUrl
 
 ' --- Envia pro Slack (opcional) ---
+Dim computerName
+computerName = WshShell.ExpandEnvironmentStrings("%COMPUTERNAME%")
 Dim slackMsg
 slackMsg = ":large_green_circle: *Claude Remote Control* esta ativo!" & Chr(10) & Chr(10) & _
-           "*Maquina:* SOFTLIVE VM" & Chr(10) & _
+           "*Maquina:* " & computerName & Chr(10) & _
            "*Hora:* " & Now() & Chr(10)
 If sessionUrl <> "" Then
     slackMsg = slackMsg & "*Sessao:* <" & sessionUrl & "|Abrir no Claude>"
