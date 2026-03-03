@@ -3,3 +3,5 @@ claude-remote.running
 claude-remote-output.txt
 claude-remote-pid.txt
 claude-slack-msg.txt
+*.lnk
+.claude.json
