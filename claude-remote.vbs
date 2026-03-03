@@ -38,7 +38,7 @@ End Sub
 
 Log "=== Script iniciado ==="
 
-' --- Toggle: se flag existe, encerra ---
+' --- Toggle: se flag existe, verifica se processo ainda esta rodando ---
 If fso.FileExists(flagFile) Then
     Dim ts, savedPid
     savedPid = ""
@@ -47,17 +47,33 @@ If fso.FileExists(flagFile) Then
         savedPid = Trim(ts.ReadAll())
         ts.Close
     End If
-    Log "Flag encontrada, encerrando PID: " & savedPid
 
+    ' Verifica se o processo ainda existe (pode ter sido morto pelo reboot)
+    Dim processAlive
+    processAlive = False
     If savedPid <> "" Then
+        Dim oCheck
+        Set oCheck = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""Get-Process -Id " & savedPid & " -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id""")
+        Dim checkOut
+        checkOut = Trim(oCheck.StdOut.ReadAll())
+        If checkOut = savedPid Then processAlive = True
+    End If
+
+    If processAlive Then
+        ' Processo ativo: encerra (toggle off)
+        Log "Flag encontrada, processo ativo, encerrando PID: " & savedPid
         WshShell.Run "taskkill /PID " & savedPid & " /T /F", 0, True
         WScript.Sleep 1000
+        fso.DeleteFile flagFile
+        Log "Processo encerrado"
+        MsgBox "Claude Remote Control encerrado com sucesso!", vbInformation, "Remote Control"
+        Log "=== Script finalizado (encerrou) ==="
+        WScript.Quit
+    Else
+        ' Processo morto (ex: reboot): limpa flag e inicia normalmente
+        Log "Flag encontrada mas processo nao existe (reboot?), limpando e reiniciando"
+        fso.DeleteFile flagFile
     End If
-    fso.DeleteFile flagFile
-    Log "Processo encerrado"
-    MsgBox "Claude Remote Control encerrado com sucesso!", vbInformation, "Remote Control"
-    Log "=== Script finalizado (encerrou) ==="
-    WScript.Quit
 End If
 
 ' --- Inicia claude remote-control e captura URL do stdout ---
