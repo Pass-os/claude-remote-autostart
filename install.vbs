@@ -101,11 +101,10 @@ End If
 Dim webhook
 webhook = InputBox("INSTALACAO CONCLUIDA!" & vbCrLf & _
     "Claude Remote foi instalado e sera iniciado automaticamente com o Windows." & vbCrLf & vbCrLf & _
-    "─────────────────────────────────────────" & vbCrLf & _
     "SLACK (OPCIONAL)" & vbCrLf & _
-    "Para receber a URL da sessao no Slack, cole abaixo o seu Incoming Webhook URL." & vbCrLf & _
-    "Nao tem um? Crie em: https://api.slack.com/apps" & vbCrLf & vbCrLf & _
-    "Deixe em branco para pular esta etapa.", _
+    "Cole abaixo o seu Incoming Webhook URL para receber a URL da sessao no Slack." & vbCrLf & _
+    "Nao tem um? Acesse api.slack.com/apps para criar." & vbCrLf & vbCrLf & _
+    "Deixe em branco para pular.", _
     "Configurar Slack (opcional)", existingWebhook)
 
 ' --- Cria pasta de instalacao ---
