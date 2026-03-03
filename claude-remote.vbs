@@ -2,98 +2,115 @@ Dim WshShell, fso
 Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 
-Dim logFile, flagFile
-logFile = "C:\Users\softlive\Desktop\claude-remote.log"
-flagFile = "C:\Users\softlive\claude-remote.running"
+Dim userHome
+userHome = WshShell.ExpandEnvironmentStrings("%USERPROFILE%")
+
+Dim logFile, flagFile, lockFile, outputFile, pidFile, tmpFile
+logFile   = userHome & "\claude-remote\claude-remote.log"
+flagFile  = userHome & "\claude-remote\claude-remote.running"
+lockFile  = userHome & "\claude-remote\claude-remote.lock"
+outputFile = userHome & "\claude-remote\claude-remote-output.txt"
+pidFile   = userHome & "\claude-remote\claude-remote-pid.txt"
+tmpFile   = userHome & "\claude-remote\claude-slack-msg.txt"
 
 Dim slackWebhook
 slackWebhook = "YOUR_SLACK_WEBHOOK_URL"
 
 ' --- Funcao de log ---
 Sub Log(msg)
+    On Error Resume Next
     Dim tsLog
     Set tsLog = fso.OpenTextFile(logFile, 8, True)
     tsLog.WriteLine Now() & " | " & msg
     tsLog.Close
 End Sub
 
-' --- Funcao: envia mensagem pro Slack ---
+' --- Funcao: envia pro Slack (totalmente opcional, nunca para o script) ---
 Sub SendSlack(msg)
-    ' Salva a mensagem em arquivo temporario e le pelo powershell (evita problemas com & e aspas na URL)
-    Dim tmpFile
-    tmpFile = "C:\Users\softlive\claude-slack-msg.txt"
+    On Error Resume Next
+    If slackWebhook = "YOUR_SLACK_WEBHOOK_URL" Or slackWebhook = "" Then Exit Sub
     Dim tsTmp
     Set tsTmp = fso.CreateTextFile(tmpFile, True)
     tsTmp.Write msg
     tsTmp.Close
-
+    If Err.Number <> 0 Then Exit Sub
     Dim cmd
     cmd = "powershell -NoProfile -NonInteractive -Command """ & _
         "$msg = [System.IO.File]::ReadAllText('" & tmpFile & "'); " & _
         "$body = ConvertTo-Json @{text=$msg}; " & _
         "Invoke-RestMethod -Uri '" & slackWebhook & "' -Method Post -ContentType 'application/json' -Body $body" & """"
     WshShell.Run cmd, 0, True
-    Log "Slack enviado: " & msg
+    Log "Slack enviado"
 End Sub
 
 Log "=== Script iniciado ==="
+
+' --- Previne duas instancias simultaneas ---
+If fso.FileExists(lockFile) Then
+    Log "Outra instancia ja esta rodando, encerrando"
+    WScript.Quit
+End If
+On Error Resume Next
+Dim tsLock
+Set tsLock = fso.CreateTextFile(lockFile, True)
+tsLock.Write Now()
+tsLock.Close
+On Error GoTo 0
 
 ' --- Toggle: se flag existe, verifica se processo ainda esta rodando ---
 If fso.FileExists(flagFile) Then
     Dim ts, savedPid
     savedPid = ""
+    On Error Resume Next
     If fso.GetFile(flagFile).Size > 0 Then
         Set ts = fso.OpenTextFile(flagFile, 1)
         savedPid = Trim(ts.ReadAll())
         ts.Close
     End If
+    On Error GoTo 0
 
-    ' Verifica se o processo ainda existe (pode ter sido morto pelo reboot)
     Dim processAlive
     processAlive = False
     If savedPid <> "" Then
         Dim oCheck
         Set oCheck = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""Get-Process -Id " & savedPid & " -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id""")
-        Dim checkOut
-        checkOut = Trim(oCheck.StdOut.ReadAll())
-        If checkOut = savedPid Then processAlive = True
+        If Trim(oCheck.StdOut.ReadAll()) = savedPid Then processAlive = True
     End If
 
     If processAlive Then
-        ' Processo ativo: encerra (toggle off)
-        Log "Flag encontrada, processo ativo, encerrando PID: " & savedPid
+        Log "Encerrando PID: " & savedPid
         WshShell.Run "taskkill /PID " & savedPid & " /T /F", 0, True
         WScript.Sleep 1000
+        On Error Resume Next
         fso.DeleteFile flagFile
+        fso.DeleteFile lockFile
+        On Error GoTo 0
         Log "Processo encerrado"
-        MsgBox "Claude Remote Control encerrado com sucesso!", vbInformation, "Remote Control"
         Log "=== Script finalizado (encerrou) ==="
         WScript.Quit
     Else
-        ' Processo morto (ex: reboot): limpa flag e inicia normalmente
-        Log "Flag encontrada mas processo nao existe (reboot?), limpando e reiniciando"
+        Log "Processo nao existe (reboot?), limpando flag"
+        On Error Resume Next
         fso.DeleteFile flagFile
+        On Error GoTo 0
     End If
 End If
 
-' --- Inicia claude remote-control e captura URL do stdout ---
-Log "Iniciando claude remote-control"
-
-Dim outputFile, pidFile
-outputFile = "C:\Users\softlive\claude-remote-output.txt"
-pidFile = "C:\Users\softlive\claude-remote-pid.txt"
-
-' Deleta arquivos anteriores
+' --- Limpa arquivos anteriores ---
+On Error Resume Next
 If fso.FileExists(outputFile) Then fso.DeleteFile outputFile
 If fso.FileExists(pidFile) Then fso.DeleteFile pidFile
+On Error GoTo 0
 
-' Inicia via script ps1 separado (evita problema de aspas no inline)
-WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\softlive\claude-remote-start.ps1", 0, True
+' --- Inicia claude remote-control ---
+Log "Iniciando claude remote-control"
+WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -File """ & userHome & "\claude-remote\claude-remote-start.ps1""", 0, True
 WScript.Sleep 500
 
-' Le o PID
+' --- Le o PID ---
 Dim claudePid
 claudePid = ""
+On Error Resume Next
 If fso.FileExists(pidFile) Then
     Dim tsPid
     Set tsPid = fso.OpenTextFile(pidFile, 1)
@@ -101,16 +118,19 @@ If fso.FileExists(pidFile) Then
     tsPid.Close
     fso.DeleteFile pidFile
 End If
-Log "PID capturado: " & claudePid
+On Error GoTo 0
+Log "PID: " & claudePid
 
-' Salva flag com PID
+' --- Salva flag ---
+On Error Resume Next
 Dim tsWrite
 Set tsWrite = fso.CreateTextFile(flagFile, True)
 tsWrite.Write claudePid
 tsWrite.Close
+On Error GoTo 0
 
-' Aguarda URL aparecer no output (max 15s)
-Log "Aguardando URL no output..."
+' --- Tenta capturar URL (opcional, nao para o script) ---
+Log "Aguardando URL..."
 Dim sessionUrl, attempts
 sessionUrl = ""
 attempts = 0
@@ -118,47 +138,51 @@ attempts = 0
 Do While sessionUrl = "" And attempts < 15
     WScript.Sleep 1000
     attempts = attempts + 1
-
+    On Error Resume Next
     If fso.FileExists(outputFile) Then
-        Dim tsOut, outContent, outLines, ol
+        Dim tsOut, outContent
         Set tsOut = fso.OpenTextFile(outputFile, 1)
         outContent = tsOut.ReadAll()
         tsOut.Close
-
-        outLines = Split(outContent, vbLf)
-        For ol = 0 To UBound(outLines)
-            If InStr(outLines(ol), "https://claude.ai/code/session") > 0 Then
-                Dim parts, p
-                parts = Split(outLines(ol), " ")
-                For p = 0 To UBound(parts)
-                    If InStr(parts(p), "https://claude.ai/code/session") > 0 Then
-                        sessionUrl = Trim(parts(p))
-                        ' Remove caracteres nao-URL do final
-                        Do While Len(sessionUrl) > 0 And InStr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-/:.#?=&", Right(sessionUrl, 1)) = 0
-                            sessionUrl = Left(sessionUrl, Len(sessionUrl) - 1)
-                        Loop
-                        Exit For
-                    End If
-                Next
-            End If
-            If sessionUrl <> "" Then Exit For
-        Next
+        If Err.Number = 0 And Len(outContent) > 0 Then
+            Dim outLines, ol
+            outLines = Split(outContent, vbLf)
+            For ol = 0 To UBound(outLines)
+                If InStr(outLines(ol), "https://claude.ai/code/session") > 0 Then
+                    Dim parts, p
+                    parts = Split(outLines(ol), " ")
+                    For p = 0 To UBound(parts)
+                        If InStr(parts(p), "https://claude.ai/code/session") > 0 Then
+                            sessionUrl = Trim(parts(p))
+                            Do While Len(sessionUrl) > 0 And InStr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-/:.#?=&", Right(sessionUrl, 1)) = 0
+                                sessionUrl = Left(sessionUrl, Len(sessionUrl) - 1)
+                            Loop
+                            Exit For
+                        End If
+                    Next
+                End If
+                If sessionUrl <> "" Then Exit For
+            Next
+        End If
     End If
+    On Error GoTo 0
 Loop
 
-Log "URL capturada apos " & attempts & "s: " & sessionUrl
+Log "URL: " & sessionUrl
 
-' Envia pro Slack
+' --- Envia pro Slack (opcional) ---
 If sessionUrl <> "" Then
     SendSlack ":computer: *SOFTLIVE VM* - Remote Control ativo!" & Chr(10) & ":link: " & sessionUrl
 Else
-    SendSlack ":computer: *SOFTLIVE VM* - Remote Control ativo! Acesse: claude.ai/code"
-    Log "AVISO: URL nao encontrada no output"
+    SendSlack ":computer: *SOFTLIVE VM* - Remote Control ativo!"
 End If
 
-Log "Sucesso! PID: " & claudePid
-MsgBox "Claude Remote Control iniciado com sucesso!" & vbCrLf & "Sessao ativa - PID: " & claudePid, vbInformation, "Remote Control"
+' --- Remove lock ---
+On Error Resume Next
+fso.DeleteFile lockFile
+On Error GoTo 0
 
+Log "Sucesso! PID: " & claudePid
 Log "=== Script finalizado ==="
 
 Set fso = Nothing
