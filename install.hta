@@ -371,54 +371,89 @@ Sub Window_OnLoad()
         document.getElementById("welcomeDesc").innerText = "Claude Remote is already installed. This will update your files."
     End If
 
-    window.setTimeout "RunChecks()", 500
+    RunChecks()
 End Sub
 
 Sub RunChecks()
-    Dim allOk
-    allOk = True
-
-    ' Claude installed?
-    If fso.FileExists(claudePath) Then
-        SetStatus "stClaude", "Found", "ok"
-    Else
+    ' --- Check 1: Claude installed (instant, no process needed) ---
+    If Not fso.FileExists(claudePath) Then
         SetStatus "stClaude", "Not found", "fail"
-        ShowAlert "alertWelcome", "error", "Claude Code not found at: " & claudePath & vbCrLf & "Install it from claude.ai/code and re-run this installer."
+        SetStatus "stLogin", "Skipped", "wait"
+        SetStatus "stTrust", "Skipped", "wait"
+        ShowAlert "alertWelcome", "error", "Claude Code not found." & vbCrLf & "Install it from claude.ai/code and re-run this installer."
         document.getElementById("btnNext").disabled = True
         Exit Sub
     End If
+    SetStatus "stClaude", "Found", "ok"
 
-    ' Logged in?
-    Dim oExec, output
-    Set oExec = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""& '" & claudePath & "' --version 2>&1""")
-    output = LCase(oExec.StdOut.ReadAll() & oExec.StdErr.ReadAll())
+    ' --- Check 2: Logged in (run claude --version to a temp file) ---
+    Dim tmpOut
+    tmpOut = userHome & "\claude-remote-check.tmp"
+    On Error Resume Next
+    If fso.FileExists(tmpOut) Then fso.DeleteFile tmpOut
+    On Error GoTo 0
 
-    If InStr(output, "not logged") > 0 Or InStr(output, "login") > 0 Then
+    WshShell.Run "cmd /c """ & claudePath & """ --version > """ & tmpOut & """ 2>&1", 0, True
+
+    Dim output
+    output = ""
+    On Error Resume Next
+    If fso.FileExists(tmpOut) Then
+        Dim ts
+        Set ts = fso.OpenTextFile(tmpOut, 1)
+        output = LCase(ts.ReadAll())
+        ts.Close
+        fso.DeleteFile tmpOut
+    End If
+    On Error GoTo 0
+
+    If InStr(output, "not logged") > 0 Or (InStr(output, "login") > 0 And InStr(output, "claude") = 0) Then
         SetStatus "stLogin", "Not logged in", "fail"
+        SetStatus "stTrust", "Skipped", "wait"
         ShowAlert "alertWelcome", "error", "Claude Code is not logged in." & vbCrLf & "Open a terminal and run: claude login"
         document.getElementById("btnNext").disabled = True
         Exit Sub
-    Else
-        SetStatus "stLogin", "OK", "ok"
     End If
+    SetStatus "stLogin", "OK", "ok"
 
-    ' Workspace trusted?
-    Dim oTrust, trustOut
-    Set oTrust = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""cd '" & userHome & "'; & '" & claudePath & "' remote-control --help 2>&1 | Select-String 'Workspace not trusted'""")
-    trustOut = oTrust.StdOut.ReadAll()
+    ' --- Check 3: Workspace trust (read .claude.json directly, no process) ---
+    Dim clauJson
+    clauJson = userHome & "\.claude.json"
+    Dim trusted
+    trusted = False
+    On Error Resume Next
+    If fso.FileExists(clauJson) Then
+        Dim tsJ
+        Set tsJ = fso.OpenTextFile(clauJson, 1)
+        Dim jContent
+        jContent = tsJ.ReadAll()
+        tsJ.Close
+        ' Check if home folder has hasTrustDialogAccepted: true
+        ' Look for the userHome key with forward slashes followed by hasTrustDialogAccepted true
+        Dim userHomeSlash
+        userHomeSlash = Replace(userHome, "\", "/")
+        Dim pos
+        pos = InStr(jContent, userHomeSlash)
+        If pos > 0 Then
+            Dim block
+            block = Mid(jContent, pos, 300)
+            If InStr(block, """hasTrustDialogAccepted"": true") > 0 Then
+                trusted = True
+            End If
+        End If
+    End If
+    On Error GoTo 0
 
-    If InStr(trustOut, "Workspace not trusted") > 0 Then
+    If Not trusted Then
         SetStatus "stTrust", "Not trusted", "fail"
-        ShowAlert "alertWelcome", "warning", "Workspace not trusted." & vbCrLf & "Open a terminal, go to your home folder, run 'claude' and accept the trust dialog."
+        ShowAlert "alertWelcome", "warning", "Workspace not trusted." & vbCrLf & "Open a terminal, go to your home folder, run 'claude' and accept the trust dialog. Then re-run this installer."
         document.getElementById("btnNext").disabled = True
         Exit Sub
-    Else
-        SetStatus "stTrust", "Trusted", "ok"
     End If
+    SetStatus "stTrust", "Trusted", "ok"
 
     checksOk = True
     document.getElementById("btnNext").disabled = False
-
     If alreadyInstalled Then LoadExistingWebhook()
 End Sub
 
