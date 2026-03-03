@@ -40,6 +40,8 @@ Sub SendSlack(msg)
         "$body = ConvertTo-Json @{text=$msg}; " & _
         "Invoke-RestMethod -Uri '" & slackWebhook & "' -Method Post -ContentType 'application/json' -Body $body" & """"
     WshShell.Run cmd, 0, True
+    ' Remove arquivo temporario apos envio
+    If fso.FileExists(tmpFile) Then fso.DeleteFile tmpFile
     Log "Slack enviado"
 End Sub
 
@@ -71,9 +73,10 @@ If fso.FileExists(flagFile) Then
 
     Dim processAlive
     processAlive = False
-    If savedPid <> "" Then
+    ' Valida que savedPid e puramente numerico antes de usar no comando
+    If savedPid <> "" And IsNumeric(savedPid) Then
         Dim oCheck
-        Set oCheck = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""Get-Process -Id " & savedPid & " -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id""")
+        Set oCheck = WshShell.Exec("powershell -NoProfile -NonInteractive -Command ""Get-Process -Id " & CLng(savedPid) & " -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id""")
         If Trim(oCheck.StdOut.ReadAll()) = savedPid Then processAlive = True
     End If
 
