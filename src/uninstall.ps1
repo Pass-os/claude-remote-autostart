@@ -57,7 +57,14 @@ $lang['en'] = @{
     StWaiting    = '...'
 }
 
-$script:T = $lang['pt']
+# Lê idioma salvo pelo instalador
+$savedLang = 'pt'
+$langFile = "$env:APPDATA\claude-remote\claude-remote-lang.txt"
+if (Test-Path $langFile) {
+    $savedLang = (Get-Content $langFile -Raw).Trim()
+    if (-not $lang.ContainsKey($savedLang)) { $savedLang = 'pt' }
+}
+$script:T = $lang[$savedLang]
 
 # Paleta Claude Dark
 $bg       = [System.Drawing.Color]::FromArgb(26,  25,  21)
@@ -131,9 +138,9 @@ $form.MaximizeBox     = $false
 
 $form.add_Shown({
     Apply-Lang
-    Show-Screen 0
     $rgn = [Win32U]::CreateRoundRectRgn(0, 0, $form.Width + 1, $form.Height + 1, 20, 20)
     [Win32U]::SetWindowRgn($form.Handle, $rgn, $true) | Out-Null
+    if (Test-Path $langFile) { Show-Screen 1 } else { Show-Screen 0 }
 })
 
 

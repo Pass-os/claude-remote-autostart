@@ -353,6 +353,7 @@ function New-LangBtn($text, $sub, $y, $langKey) {
         Apply-Lang
         Show-Screen 1
         Run-Checks
+        try { Set-Content '$env:APPDATA\claude-remote\claude-remote-lang.txt' '$langKey' -Encoding ASCII } catch {}
     ")
     $p.add_Click($click)
     $lt.add_Click($click)
