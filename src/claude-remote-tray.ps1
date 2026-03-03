@@ -1,7 +1,7 @@
 param(
     [string]$SessionUrl = "",
-    [string]$FlagFile = "$env:USERPROFILE\claude-remote\claude-remote.running",
-    [string]$LogFile = "$env:USERPROFILE\claude-remote\claude-remote.log"
+    [string]$FlagFile = "$env:APPDATA\claude-remote\claude-remote.running",
+    [string]$LogFile = "$env:APPDATA\claude-remote\claude-remote.log"
 )
 
 Add-Type -AssemblyName System.Windows.Forms
@@ -63,8 +63,8 @@ $itemRestart = New-Object System.Windows.Forms.ToolStripMenuItem
 $itemRestart.Text = "Reiniciar Servico"
 $itemRestart.Add_Click({
     $tray.Visible = $false
-    $vbsPath = "$env:USERPROFILE\claude-remote\claude-remote.vbs"
-    $flagFile = "$env:USERPROFILE\claude-remote\claude-remote.running"
+    $vbsPath = "$env:APPDATA\claude-remote\claude-remote.vbs"
+    $flagFile = "$env:APPDATA\claude-remote\claude-remote.running"
     # Para o processo atual se estiver rodando
     if (Test-Path $flagFile) {
         $savedPid = (Get-Content $flagFile -Raw).Trim()
@@ -86,7 +86,7 @@ $itemStop.Text = "Parar Claude Remote"
 $itemStop.ForeColor = [System.Drawing.Color]::Red
 $itemStop.Add_Click({
     $tray.Visible = $false
-    $vbsPath = "$env:USERPROFILE\claude-remote\claude-remote.vbs"
+    $vbsPath = "$env:APPDATA\claude-remote\claude-remote.vbs"
     Start-Process -FilePath "wscript.exe" -ArgumentList "`"$vbsPath`""
     [System.Windows.Forms.Application]::Exit()
 })

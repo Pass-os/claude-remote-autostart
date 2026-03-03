@@ -2,16 +2,17 @@ Dim WshShell, fso
 Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 
-Dim userHome
-userHome = WshShell.ExpandEnvironmentStrings("%USERPROFILE%")
+Dim appData, installDir
+appData    = WshShell.ExpandEnvironmentStrings("%APPDATA%")
+installDir = appData & "\claude-remote"
 
 Dim logFile, flagFile, lockFile, outputFile, pidFile, tmpFile
-logFile   = userHome & "\claude-remote\claude-remote.log"
-flagFile  = userHome & "\claude-remote\claude-remote.running"
-lockFile  = userHome & "\claude-remote\claude-remote.lock"
-outputFile = userHome & "\claude-remote\claude-remote-output.txt"
-pidFile   = userHome & "\claude-remote\claude-remote-pid.txt"
-tmpFile   = userHome & "\claude-remote\claude-slack-msg.txt"
+logFile    = installDir & "\claude-remote.log"
+flagFile   = installDir & "\claude-remote.running"
+lockFile   = installDir & "\claude-remote.lock"
+outputFile = installDir & "\claude-remote-output.txt"
+pidFile    = installDir & "\claude-remote-pid.txt"
+tmpFile    = installDir & "\claude-slack-msg.txt"
 
 Dim slackWebhook
 slackWebhook = "YOUR_SLACK_WEBHOOK_URL"
@@ -107,7 +108,7 @@ On Error GoTo 0
 
 ' --- Inicia claude remote-control ---
 Log "Iniciando claude remote-control"
-WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -File """ & userHome & "\claude-remote\claude-remote-start.ps1""", 0, True
+WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -File """ & installDir & "\claude-remote-start.ps1""", 0, True
 WScript.Sleep 500
 
 ' --- Le o PID ---
@@ -189,7 +190,7 @@ SendSlack slackMsg
 
 ' --- Notificacao toast do Windows ---
 Dim notifyScript, toastBody
-notifyScript = userHome & "\claude-remote\claude-remote-notify.ps1"
+notifyScript = installDir & "\claude-remote-notify.ps1"
 If sessionUrl <> "" Then
     toastBody = "Sessao iniciada com sucesso."
 Else
@@ -201,7 +202,7 @@ End If
 
 ' --- Inicia icone na bandeja ---
 Dim trayScript
-trayScript = userHome & "\claude-remote\claude-remote-tray.ps1"
+trayScript = installDir & "\claude-remote-tray.ps1"
 If fso.FileExists(trayScript) Then
     WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & trayScript & """ -SessionUrl """ & sessionUrl & """", 0, False
 End If

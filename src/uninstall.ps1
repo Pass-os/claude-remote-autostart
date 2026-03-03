@@ -2,7 +2,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $userHome   = $env:USERPROFILE
-$installDir = "$userHome\claude-remote"
+$installDir = "$env:APPDATA\claude-remote"
 $startupLnk = [System.IO.Path]::Combine([Environment]::GetFolderPath('Startup'), 'claude-remote.lnk')
 
 $lang = @{}

@@ -1,6 +1,6 @@
-$userHome = $env:USERPROFILE
-$outputFile = "$userHome\claude-remote\claude-remote-output.txt"
-$pidFile = "$userHome\claude-remote\claude-remote-pid.txt"
+$installDir = "$env:APPDATA\claude-remote"
+$outputFile  = "$installDir\claude-remote-output.txt"
+$pidFile     = "$installDir\claude-remote-pid.txt"
 
 # Remove arquivos anteriores
 if (Test-Path $outputFile) { Remove-Item $outputFile -Force }
@@ -8,9 +8,9 @@ if (Test-Path $pidFile) { Remove-Item $pidFile -Force }
 
 # Inicia claude remote-control em background
 $p = Start-Process `
-    -FilePath "$userHome\.local\bin\claude.exe" `
+    -FilePath "$env:USERPROFILE\.local\bin\claude.exe" `
     -ArgumentList "remote-control", "--permission-mode", "bypassPermissions" `
-    -WorkingDirectory "$userHome\claude-remote" `
+    -WorkingDirectory $installDir `
     -RedirectStandardOutput $outputFile `
     -WindowStyle Hidden `
     -PassThru
