@@ -648,18 +648,19 @@ function Run-Install {
         Set-CheckStatus $stFiles $T.StError $red
         $alertInstallLbl.Text = "$($T.StError): $_"; $alertInstall.Visible = $true; return
     }
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     try {
         $c = Get-Content "$installDir\claude-remote.vbs" -Raw
         $c = $c -replace [regex]::Escape('C:\Users\softlive'), $userHome
         if ($script:slackWebhook -match 'hooks\.slack\.com') {
             $c = $c -replace 'YOUR_SLACK_WEBHOOK_URL', $script:slackWebhook
         }
-        Set-Content "$installDir\claude-remote.vbs" $c -Encoding UTF8
+        [System.IO.File]::WriteAllText("$installDir\claude-remote.vbs", $c, $utf8NoBom)
     } catch {}
     try {
         $c = Get-Content "$installDir\claude-remote-start.ps1" -Raw
         $c = $c -replace [regex]::Escape('C:\Users\softlive'), $userHome
-        Set-Content "$installDir\claude-remote-start.ps1" $c -Encoding UTF8
+        [System.IO.File]::WriteAllText("$installDir\claude-remote-start.ps1", $c, $utf8NoBom)
     } catch {}
     try {
         $wsh = New-Object -ComObject WScript.Shell
