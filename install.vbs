@@ -11,13 +11,26 @@ installDir = userHome & "\claude-remote"
 Dim scriptDir
 scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
 
-MsgBox "Claude Remote Auto-Start - Instalador" & vbCrLf & vbCrLf & _
-    "Este instalador vai:" & vbCrLf & _
-    "  1. Verificar se o Claude Code esta instalado e logado" & vbCrLf & _
-    "  2. Copiar os arquivos para " & installDir & vbCrLf & _
-    "  3. Configurar o Slack webhook" & vbCrLf & _
-    "  4. Adicionar ao startup do Windows", _
-    vbInformation, "Instalador"
+' --- Verifica se ja esta instalado ---
+Dim alreadyInstalled
+alreadyInstalled = fso.FileExists(installDir & "\claude-remote.vbs")
+
+If alreadyInstalled Then
+    Dim reInstall
+    reInstall = MsgBox("Claude Remote ja esta instalado em:" & vbCrLf & installDir & vbCrLf & vbCrLf & _
+        "Deseja atualizar/reinstalar?", vbYesNo + vbQuestion, "Ja instalado")
+    If reInstall = vbNo Then WScript.Quit
+End If
+
+If Not alreadyInstalled Then
+    MsgBox "Claude Remote Auto-Start - Instalador" & vbCrLf & vbCrLf & _
+        "Este instalador vai:" & vbCrLf & _
+        "  1. Verificar se o Claude Code esta instalado e logado" & vbCrLf & _
+        "  2. Copiar os arquivos para " & installDir & vbCrLf & _
+        "  3. Configurar o Slack webhook" & vbCrLf & _
+        "  4. Adicionar ao startup do Windows", _
+        vbInformation, "Instalador"
+End If
 
 ' --- Verifica Claude instalado ---
 Dim claudePath
@@ -63,11 +76,33 @@ If InStr(trustOut, "Workspace not trusted") > 0 Then
 End If
 
 ' --- Pede o Slack Webhook ---
+' Se ja instalado, le o webhook atual como valor padrao
+Dim existingWebhook
+existingWebhook = ""
+If alreadyInstalled Then
+    On Error Resume Next
+    Dim tsExisting
+    Set tsExisting = fso.OpenTextFile(installDir & "\claude-remote.vbs", 1)
+    Dim existingContent
+    existingContent = tsExisting.ReadAll()
+    tsExisting.Close
+    Dim existingLines, el
+    existingLines = Split(existingContent, vbLf)
+    For el = 0 To UBound(existingLines)
+        If InStr(existingLines(el), "slackWebhook =") > 0 And InStr(existingLines(el), "YOUR_SLACK_WEBHOOK_URL") = 0 Then
+            existingWebhook = Trim(existingLines(el))
+            existingWebhook = Mid(existingWebhook, InStr(existingWebhook, """") + 1)
+            existingWebhook = Left(existingWebhook, Len(existingWebhook) - 1)
+        End If
+    Next
+    On Error GoTo 0
+End If
+
 Dim webhook
 webhook = InputBox("Cole aqui o seu Slack Incoming Webhook URL:" & vbCrLf & vbCrLf & _
     "Exemplo: https://hooks.slack.com/services/XXX/YYY/ZZZ" & vbCrLf & vbCrLf & _
     "(Deixe em branco para pular - voce pode configurar depois)", _
-    "Slack Webhook", "")
+    "Slack Webhook", existingWebhook)
 
 If webhook = "" Then
     Dim skipSlack
