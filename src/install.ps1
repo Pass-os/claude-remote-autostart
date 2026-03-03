@@ -106,17 +106,17 @@ $lang['en'] = @{
 
 $script:T = $lang['pt']
 
-# Paleta Claude/Anthropic
-$bg       = [System.Drawing.Color]::FromArgb(250, 249, 245)
-$bgPanel  = [System.Drawing.Color]::FromArgb(244, 243, 238)
-$bgDark   = [System.Drawing.Color]::FromArgb(232, 230, 220)
-$fgDark   = [System.Drawing.Color]::FromArgb(61,  57,  41)
-$fgMuted  = [System.Drawing.Color]::FromArgb(140, 134, 115)
-$accent   = [System.Drawing.Color]::FromArgb(217, 119, 87)
-$accentDk = [System.Drawing.Color]::FromArgb(193, 95,  60)
-$green    = [System.Drawing.Color]::FromArgb(100, 130, 80)
-$red      = [System.Drawing.Color]::FromArgb(185, 70,  55)
-$yellow   = [System.Drawing.Color]::FromArgb(170, 120, 40)
+# Paleta Claude Dark
+$bg       = [System.Drawing.Color]::FromArgb(26,  25,  21)   # #1a1915
+$bgPanel  = [System.Drawing.Color]::FromArgb(33,  32,  28)   # #21201c
+$bgDark   = [System.Drawing.Color]::FromArgb(48,  46,  40)   # #302e28
+$fgDark   = [System.Drawing.Color]::FromArgb(232, 229, 220)  # #e8e5dc off-white quente
+$fgMuted  = [System.Drawing.Color]::FromArgb(140, 136, 120)  # muted quente
+$accent   = [System.Drawing.Color]::FromArgb(217, 119, 87)   # #d97757 terra cotta
+$accentDk = [System.Drawing.Color]::FromArgb(193, 95,  60)   # #c15f3c
+$green    = [System.Drawing.Color]::FromArgb(130, 175, 100)  # verde suave
+$red      = [System.Drawing.Color]::FromArgb(220, 100, 80)   # vermelho quente
+$yellow   = [System.Drawing.Color]::FromArgb(200, 160, 70)   # amarelo quente
 
 $fontMain  = New-Object System.Drawing.Font('Georgia', 10)
 $fontBold  = New-Object System.Drawing.Font('Georgia', 10, [System.Drawing.FontStyle]::Bold)
@@ -278,8 +278,8 @@ function New-LangBtn($text, $sub, $y, $langKey) {
     $p.Controls.Add($lt)
     $p.Controls.Add($ls)
     $hoverColor = [System.Drawing.Color]::FromArgb(238, 236, 226)
-    $p.add_MouseEnter({ param($sender, $e) $sender.BackColor = $hoverColor })
-    $p.add_MouseLeave({ param($sender, $e) $sender.BackColor = $bgPanel    })
+    $p.add_MouseEnter({ param($sender, $e) $sender.BackColor = [System.Drawing.Color]::FromArgb(44, 43, 37) })
+    $p.add_MouseLeave({ param($sender, $e) $sender.BackColor = [System.Drawing.Color]::FromArgb(33, 32, 28) })
     $click = [scriptblock]::Create("
         `$script:T = `$lang['$langKey']
         Apply-Lang
@@ -312,7 +312,7 @@ $crTrustLabel  = $s0.Controls[4].Controls[0]
 $alertBox = New-Object System.Windows.Forms.Panel
 $alertBox.Location  = New-Object System.Drawing.Point(0, 202)
 $alertBox.Size      = New-Object System.Drawing.Size(440, 56)
-$alertBox.BackColor = [System.Drawing.Color]::FromArgb(252, 238, 228)
+$alertBox.BackColor = [System.Drawing.Color]::FromArgb(55, 35, 25)
 $alertBox.Visible   = $false
 $s0.Controls.Add($alertBox)
 $alertLbl = New-Label '' 16 8 410 44 $fontSmall $red
@@ -383,7 +383,7 @@ $crSlackLabel   = $s2.Controls[4].Controls[0]
 $alertInstall = New-Object System.Windows.Forms.Panel
 $alertInstall.Location  = New-Object System.Drawing.Point(0, 202)
 $alertInstall.Size      = New-Object System.Drawing.Size(440, 56)
-$alertInstall.BackColor = [System.Drawing.Color]::FromArgb(252, 238, 228)
+$alertInstall.BackColor = [System.Drawing.Color]::FromArgb(55, 35, 25)
 $alertInstall.Visible   = $false
 $s2.Controls.Add($alertInstall)
 $alertInstallLbl = New-Label '' 16 8 410 44 $fontSmall $red

@@ -59,17 +59,17 @@ $lang['en'] = @{
 
 $script:T = $lang['pt']
 
-# Paleta Claude/Anthropic
-$bg       = [System.Drawing.Color]::FromArgb(250, 249, 245)
-$bgPanel  = [System.Drawing.Color]::FromArgb(244, 243, 238)
-$bgDark   = [System.Drawing.Color]::FromArgb(232, 230, 220)
-$fgDark   = [System.Drawing.Color]::FromArgb(61,  57,  41)
-$fgMuted  = [System.Drawing.Color]::FromArgb(140, 134, 115)
+# Paleta Claude Dark
+$bg       = [System.Drawing.Color]::FromArgb(26,  25,  21)
+$bgPanel  = [System.Drawing.Color]::FromArgb(33,  32,  28)
+$bgDark   = [System.Drawing.Color]::FromArgb(48,  46,  40)
+$fgDark   = [System.Drawing.Color]::FromArgb(232, 229, 220)
+$fgMuted  = [System.Drawing.Color]::FromArgb(140, 136, 120)
 $accent   = [System.Drawing.Color]::FromArgb(217, 119, 87)
 $accentDk = [System.Drawing.Color]::FromArgb(193, 95,  60)
-$green    = [System.Drawing.Color]::FromArgb(100, 130, 80)
-$red      = [System.Drawing.Color]::FromArgb(185, 70,  55)
-$redBg    = [System.Drawing.Color]::FromArgb(252, 238, 228)
+$green    = [System.Drawing.Color]::FromArgb(130, 175, 100)
+$red      = [System.Drawing.Color]::FromArgb(220, 100, 80)
+$redBg    = [System.Drawing.Color]::FromArgb(55,  35,  25)
 
 $fontMain  = New-Object System.Drawing.Font('Georgia', 10)
 $fontBold  = New-Object System.Drawing.Font('Georgia', 10, [System.Drawing.FontStyle]::Bold)
@@ -232,8 +232,8 @@ function New-LangBtn($text, $sub, $y, $langKey) {
     $p.Controls.Add($lt)
     $p.Controls.Add($ls)
     $hoverColor = [System.Drawing.Color]::FromArgb(238, 236, 226)
-    $p.add_MouseEnter({ param($sender, $e) $sender.BackColor = $hoverColor })
-    $p.add_MouseLeave({ param($sender, $e) $sender.BackColor = $bgPanel    })
+    $p.add_MouseEnter({ param($sender, $e) $sender.BackColor = [System.Drawing.Color]::FromArgb(44, 43, 37) })
+    $p.add_MouseLeave({ param($sender, $e) $sender.BackColor = [System.Drawing.Color]::FromArgb(33, 32, 28) })
     $click = [scriptblock]::Create("
         `$script:T = `$lang['$langKey']
         Apply-Lang
