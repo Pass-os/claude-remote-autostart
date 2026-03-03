@@ -58,13 +58,34 @@ $menu.Items.Add($itemCopy) | Out-Null
 
 $menu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator)) | Out-Null
 
+# Item: reiniciar
+$itemRestart = New-Object System.Windows.Forms.ToolStripMenuItem
+$itemRestart.Text = "Reiniciar Servico"
+$itemRestart.Add_Click({
+    $tray.Visible = $false
+    $vbsPath = "$env:USERPROFILE\claude-remote\claude-remote.vbs"
+    $flagFile = "$env:USERPROFILE\claude-remote\claude-remote.running"
+    # Para o processo atual se estiver rodando
+    if (Test-Path $flagFile) {
+        $savedPid = (Get-Content $flagFile -Raw).Trim()
+        if ($savedPid -match '^\d+$') {
+            Start-Process -FilePath "taskkill" -ArgumentList "/PID $savedPid /T /F" -WindowStyle Hidden -Wait -ErrorAction SilentlyContinue
+        }
+        Remove-Item $flagFile -ErrorAction SilentlyContinue
+    }
+    Start-Sleep -Milliseconds 1000
+    # Reinicia
+    Start-Process -FilePath "wscript.exe" -ArgumentList "`"$vbsPath`""
+    [System.Windows.Forms.Application]::Exit()
+})
+$menu.Items.Add($itemRestart) | Out-Null
+
 # Item: parar
 $itemStop = New-Object System.Windows.Forms.ToolStripMenuItem
 $itemStop.Text = "Parar Claude Remote"
 $itemStop.ForeColor = [System.Drawing.Color]::Red
 $itemStop.Add_Click({
     $tray.Visible = $false
-    # Chama o vbs no modo stop (remove o flag para simular toggle)
     $vbsPath = "$env:USERPROFILE\claude-remote\claude-remote.vbs"
     Start-Process -FilePath "wscript.exe" -ArgumentList "`"$vbsPath`""
     [System.Windows.Forms.Application]::Exit()
