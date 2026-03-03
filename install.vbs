@@ -98,10 +98,22 @@ If alreadyInstalled Then
     On Error GoTo 0
 End If
 
+' Abre pagina para criar webhook antes de pedir a URL
+Dim openSlack
+openSlack = MsgBox("Para receber notificacoes no Slack, voce precisa de um Incoming Webhook." & vbCrLf & vbCrLf & _
+    "Clique em OK para abrir a pagina de criacao do app no Slack." & vbCrLf & _
+    "Clique em Cancelar para pular esta etapa.", _
+    vbOKCancel + vbInformation, "Configurar Slack Webhook")
+
+If openSlack = vbOK Then
+    WshShell.Run "https://api.slack.com/apps"
+    WScript.Sleep 1500
+End If
+
 Dim webhook
 webhook = InputBox("Cole aqui o seu Slack Incoming Webhook URL:" & vbCrLf & vbCrLf & _
     "Exemplo: https://hooks.slack.com/services/XXX/YYY/ZZZ" & vbCrLf & vbCrLf & _
-    "(Deixe em branco para pular - voce pode configurar depois)", _
+    "(Deixe em branco para pular)", _
     "Slack Webhook", existingWebhook)
 
 If webhook = "" Then

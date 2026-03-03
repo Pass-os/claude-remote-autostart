@@ -171,11 +171,16 @@ Loop
 Log "URL: " & sessionUrl
 
 ' --- Envia pro Slack (opcional) ---
+Dim slackMsg
+slackMsg = ":large_green_circle: *Claude Remote Control* esta ativo!" & Chr(10) & Chr(10) & _
+           "*Maquina:* SOFTLIVE VM" & Chr(10) & _
+           "*Hora:* " & Now() & Chr(10)
 If sessionUrl <> "" Then
-    SendSlack ":computer: *SOFTLIVE VM* - Remote Control ativo!" & Chr(10) & ":link: " & sessionUrl
+    slackMsg = slackMsg & "*Sessao:* <" & sessionUrl & "|Abrir no Claude>"
 Else
-    SendSlack ":computer: *SOFTLIVE VM* - Remote Control ativo!"
+    slackMsg = slackMsg & "*Sessao:* <https://claude.ai/code|Abrir Claude>"
 End If
+SendSlack slackMsg
 
 ' --- Inicia icone na bandeja ---
 Dim trayScript
