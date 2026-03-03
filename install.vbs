@@ -3,10 +3,10 @@ Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 
 ' --- Paths ---
-Dim userHome, desktopPath, startupPath
+Dim userHome, startupPath, installDir
 userHome = WshShell.ExpandEnvironmentStrings("%USERPROFILE%")
-desktopPath = WshShell.SpecialFolders("Desktop")
 startupPath = WshShell.SpecialFolders("Startup")
+installDir = userHome & "\claude-remote"
 
 Dim scriptDir
 scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
@@ -14,9 +14,9 @@ scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
 MsgBox "Claude Remote Auto-Start - Instalador" & vbCrLf & vbCrLf & _
     "Este instalador vai:" & vbCrLf & _
     "  1. Verificar se o Claude Code esta instalado e logado" & vbCrLf & _
-    "  2. Copiar os arquivos para os locais corretos" & vbCrLf & _
+    "  2. Copiar os arquivos para " & installDir & vbCrLf & _
     "  3. Configurar o Slack webhook" & vbCrLf & _
-    "  4. Adicionar ao startup do Windows (opcional)", _
+    "  4. Adicionar ao startup do Windows", _
     vbInformation, "Instalador"
 
 ' --- Verifica Claude instalado ---
@@ -75,10 +75,13 @@ If webhook = "" Then
     If skipSlack = vbNo Then WScript.Quit
 End If
 
+' --- Cria pasta de instalacao ---
+If Not fso.FolderExists(installDir) Then fso.CreateFolder installDir
+
 ' --- Copia os arquivos ---
 Dim vbsDest, ps1Dest
-vbsDest = desktopPath & "\claude-remote.vbs"
-ps1Dest = userHome & "\claude-remote-start.ps1"
+vbsDest = installDir & "\claude-remote.vbs"
+ps1Dest = installDir & "\claude-remote-start.ps1"
 
 Dim vbsSrc, ps1Src
 vbsSrc = scriptDir & "\claude-remote.vbs"
@@ -100,21 +103,17 @@ Set tsVbs = fso.OpenTextFile(vbsDest, 1)
 vbsContent = tsVbs.ReadAll()
 tsVbs.Close
 
-' Substitui caminho do usuario
 vbsContent = Replace(vbsContent, "C:\Users\softlive", userHome)
 
-' Substitui webhook se fornecido
 If webhook <> "" Then
-    Dim oldWebhook
-    oldWebhook = "https://hooks.slack.com/services/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"
-    vbsContent = Replace(vbsContent, oldWebhook, webhook)
+    vbsContent = Replace(vbsContent, "YOUR_SLACK_WEBHOOK_URL", webhook)
 End If
 
 Set tsVbs = fso.CreateTextFile(vbsDest, True)
 tsVbs.Write vbsContent
 tsVbs.Close
 
-' Substitui paths no ps1 copiado
+' --- Substitui paths no ps1 copiado ---
 Dim tsPs1, ps1Content
 Set tsPs1 = fso.OpenTextFile(ps1Dest, 1)
 ps1Content = tsPs1.ReadAll()
@@ -126,34 +125,20 @@ Set tsPs1 = fso.CreateTextFile(ps1Dest, True)
 tsPs1.Write ps1Content
 tsPs1.Close
 
-' --- Pergunta sobre startup ---
-Dim addStartup
-addStartup = MsgBox("Deseja iniciar o Claude Remote automaticamente com o Windows?", _
-    vbYesNo + vbQuestion, "Startup")
-
-If addStartup = vbYes Then
-    Dim oShell, oShortcut
-    Set oShell = CreateObject("WScript.Shell")
-    Set oShortcut = oShell.CreateShortcut(startupPath & "\claude-remote.lnk")
-    oShortcut.TargetPath = vbsDest
-    oShortcut.WorkingDirectory = desktopPath
-    oShortcut.Save
-End If
+' --- Cria atalho no startup apontando para installDir ---
+Dim oShortcut
+Set oShortcut = WshShell.CreateShortcut(startupPath & "\claude-remote.lnk")
+oShortcut.TargetPath = vbsDest
+oShortcut.WorkingDirectory = installDir
+oShortcut.Save
 
 ' --- Concluido ---
-Dim msg
-msg = "Instalacao concluida com sucesso!" & vbCrLf & vbCrLf & _
-    "Arquivos instalados:" & vbCrLf & _
-    "  " & vbsDest & vbCrLf & _
-    "  " & ps1Dest & vbCrLf & vbCrLf
-
-If addStartup = vbYes Then
-    msg = msg & "Atalho adicionado ao startup do Windows." & vbCrLf & vbCrLf
-End If
-
-msg = msg & "Clique duas vezes em 'claude-remote.vbs' na area de trabalho para iniciar."
-
-MsgBox msg, vbInformation, "Instalacao concluida"
+MsgBox "Instalacao concluida com sucesso!" & vbCrLf & vbCrLf & _
+    "Arquivos instalados em:" & vbCrLf & _
+    "  " & installDir & vbCrLf & vbCrLf & _
+    "Atalho adicionado ao startup do Windows." & vbCrLf & vbCrLf & _
+    "O Claude Remote sera iniciado automaticamente na proxima vez que o Windows ligar.", _
+    vbInformation, "Instalacao concluida"
 
 Set fso = Nothing
 Set WshShell = Nothing
