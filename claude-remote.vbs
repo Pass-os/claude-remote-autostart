@@ -7,7 +7,7 @@ logFile = "C:\Users\softlive\Desktop\claude-remote.log"
 flagFile = "C:\Users\softlive\claude-remote.running"
 
 Dim slackWebhook
-slackWebhook = "https://hooks.slack.com/services/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"
+slackWebhook = "YOUR_SLACK_WEBHOOK_URL"
 
 ' --- Funcao de log ---
 Sub Log(msg)
