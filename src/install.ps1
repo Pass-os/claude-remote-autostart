@@ -43,6 +43,8 @@ $lang['pt'] = @{
     BtnInstall    = 'Instalar >>'
     BtnInstalling = 'Instalando...'
     BtnClose      = 'Fechar'
+    BtnOpenFolder = 'Abrir pasta'
+    BtnStartNow   = 'Iniciar agora'
     BtnBack       = 'Voltar'
     StFound       = 'Encontrado'
     StNotFound    = 'Nao encontrado'
@@ -90,6 +92,8 @@ $lang['en'] = @{
     BtnInstall    = 'Install >>'
     BtnInstalling = 'Installing...'
     BtnClose      = 'Close'
+    BtnOpenFolder = 'Open folder'
+    BtnStartNow   = 'Start now'
     BtnBack       = 'Back'
     StFound       = 'Found'
     StNotFound    = 'Not found'
@@ -491,6 +495,41 @@ $infoSlackVal   = New-Label '' 130 10 200 18 $fontUI $green
 $infoSlack.Controls.Add($infoSlackLabel)
 $infoSlack.Controls.Add($infoSlackVal)
 
+# Botoes da tela de conclusao
+$btnOpenFolder = New-Object System.Windows.Forms.Button
+$btnOpenFolder.Location  = New-Object System.Drawing.Point(20, 210)
+$btnOpenFolder.Size      = New-Object System.Drawing.Size(130, 30)
+$btnOpenFolder.FlatStyle = 'Flat'
+$btnOpenFolder.Font      = $fontUI
+$btnOpenFolder.ForeColor = $fgDark
+$btnOpenFolder.BackColor = $bgDark
+$btnOpenFolder.FlatAppearance.BorderColor = $bgDark
+$btnOpenFolder.FlatAppearance.BorderSize  = 1
+$btnOpenFolder.Cursor    = [System.Windows.Forms.Cursors]::Hand
+$btnOpenFolder.add_Click({ Start-Process explorer.exe $installDir })
+$s3.Controls.Add($btnOpenFolder)
+
+$btnStartNow = New-Object System.Windows.Forms.Button
+$btnStartNow.Location  = New-Object System.Drawing.Point(164, 210)
+$btnStartNow.Size      = New-Object System.Drawing.Size(130, 30)
+$btnStartNow.FlatStyle = 'Flat'
+$btnStartNow.Font      = $fontUIB
+$btnStartNow.ForeColor = [System.Drawing.Color]::White
+$btnStartNow.BackColor = $accent
+$btnStartNow.FlatAppearance.BorderColor = $accentDk
+$btnStartNow.FlatAppearance.BorderSize  = 1
+$btnStartNow.FlatAppearance.MouseOverBackColor = $accentDk
+$btnStartNow.Cursor    = [System.Windows.Forms.Cursors]::Hand
+$btnStartNow.add_Click({
+    $vbsPath = "$installDir\claude-remote.vbs"
+    if (Test-Path $vbsPath) {
+        Start-Process -FilePath "wscript.exe" -ArgumentList "`"$vbsPath`""
+        $btnStartNow.Enabled = $false
+        $btnStartNow.Text    = '...'
+    }
+})
+$s3.Controls.Add($btnStartNow)
+
 # Aplicar idioma
 function Apply-Lang {
     $T = $script:T
@@ -519,6 +558,8 @@ function Apply-Lang {
     $infoSlackLabel.Text   = $T.DoneSlack
     $infoSlackVal.Text     = $T.DoneSlackVal
     $btnBack.Text          = $T.BtnBack
+    $btnOpenFolder.Text    = $T.BtnOpenFolder
+    $btnStartNow.Text      = $T.BtnStartNow
     $stClaude.Text = $T.StWaiting; $stLogin.Text = $T.StWaiting; $stTrust.Text = $T.StWaiting
     $stFiles.Text  = $T.StWaiting; $stStartup.Text = $T.StWaiting; $stSlack.Text = $T.StWaiting
 }
